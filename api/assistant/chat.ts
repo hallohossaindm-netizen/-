@@ -3,7 +3,81 @@ import { GoogleGenAI } from '@google/genai';
 const getGeminiClient = (customKey?: string) => {
   const cleanCustom = typeof customKey === 'string' ? customKey.trim() : '';
   const apiKey = cleanCustom || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-  if (!apiKey || !apiKey.trim()) return null;
+import { GoogleGenAI } from '@google/genai';
+
+const getGeminiClient = (customKey?: string) => {
+  const cleanCustom = typeof customKey === 'string' ? customKey.trim() : '';
+    const apiKey = cleanCustom || 
+        process.env.GEMINI_API_KEY || 
+            process.env.VITE_GEMINI_API_KEY;
+              if (!apiKey || !apiKey.trim()) return null;
+                
+                  // সঠিক জেমিনি ক্লায়েন্ট ইনিশিয়ালাইজেশন
+                    return new GoogleGenAI({ apiKey: apiKey.trim() });
+                    };
+                    
+                    const SYSTEM_INSTRUCTION = `
+                    আপনি "তালিমুল কুরআন মহিলা মাদ্রাসা"-এর অফিসিয়াল ইসলামিক এআই সহকারী—"তালিমুল কুরআন সহকারী" (Talimul Quran Assistant)।
+                    পবিত্র কুরআন, সহীহ হাদীস, দৈনন্দিন মাসআলা-মাসায়েল, দুআ-আমল কিংবা আমাদের মাদ্রাসার বিভাগ ও ভর্তি সংক্রান্ত যেকোনো বিষয়ে আপনাকে সাহায্য করতে পারি।
+                    `;
+                    
+                    export default async function handler(req: any, res: any) {
+                      // নিশ্চিত করা হচ্ছে যেন সবসময় JSON ফরম্যাটে রেসপন্স যায়
+                        res.setHeader('Content-Type', 'application/json');
+                        
+                          if (req.method !== 'POST') {
+                              return res.status(405).json({ error: 'Method Not Allowed' });
+                                }
+                                
+                                  try {
+                                      const { message, history, apiKey: bodyApiKey } = req.body || {};
+                                          const customKey = (bodyApiKey || req.headers?.['x-gemini-api-key']) as string | undefined;
+                                          
+                                              if (!message || typeof message !== 'string' || !message.trim()) {
+                                                    return res.status(400).json({ error: 'বার্তা প্রদান করুন।' });
+                                                        }
+                                                        
+                                                            const ai = getGeminiClient(customKey);
+                                                                if (!ai) {
+                                                                      return res.status(500).json({ 
+                                                                              error: 'জেমিনি এআই কি কনফিগার করা হয়নি। এনভায়রনমেন্ট ভেরিয়েবলে GEMINI_API_KEY সেট করুন।' 
+                                                                                    });
+                                                                                        }
+                                                                                        
+                                                                                            // চ্যাট হিস্ট্রি ফরম্যাট করা
+                                                                                                const rawTurns: Array<{ role: 'user' | 'model'; text: string }> = [];
+                                                                                                    if (Array.isArray(history)) {
+                                                                                                          for (const item of history) {
+                                                                                                                  if (item && typeof item.text === 'string' && item.text.trim()) {
+                                                                                                                            const role = item.role === 'model' ? 'model' : 'user';
+                                                                                                                                      rawTurns.push({ role, text: item.text.trim() });
+                                                                                                                                              }
+                                                                                                                                                    }
+                                                                                                                                                        }
+                                                                                                                                                            rawTurns.push({ role: 'user', text: message.trim() });
+                                                                                                                                                            
+                                                                                                                                                                // জেমিনি মডেলকে কল করা (gemini-2.5-flash বা উপযোগী মডেল ব্যবহার)
+                                                                                                                                                                    const response = await ai.models.generateContent({
+                                                                                                                                                                          model: 'gemini-2.5-flash',
+                                                                                                                                                                                contents: rawTurns.map(t => ({
+                                                                                                                                                                                        role: t.role,
+                                                                                                                                                                                                parts: [{ text: t.text }]
+                                                                                                                                                                                                      })),
+                                                                                                                                                                                                            config: {
+                                                                                                                                                                                                                    systemInstruction: SYSTEM_INSTRUCTION,
+                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                              });
+                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                  const replyText = response.text || 'দুঃখিত, এই মুহূর্তে উত্তর দিতে পারছি না।';
+                                                                                                                                                                                                                                  
+                                                                                                                                                                                                                                      return res.status(200).json({ reply: replyText });
+                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                        } catch (error: any) {
+                                                                                                                                                                                                                                            console.error('AI Chat Error:', error);
+                                                                                                                                                                                                                                                return res.status(500).json({ error: error.message || 'সার্ভারে সমস্যা হয়েছে।' });
+                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                  }
+                                                                                                                                                                                                                                                    if (!apiKey || !apiKey.trim()) return null;
   return new GoogleGenAI({
     apiKey: apiKey.trim(),
     httpOptions: {
