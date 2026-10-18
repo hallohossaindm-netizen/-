@@ -29,6 +29,21 @@
     color: #f5f5f4;
   }
 
+  /* Crisp Light Mode Input & Form Elements Styling */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    color-scheme: light;
+    color: #1c1917;
+    background-color: #ffffff;
+    border-color: #d6d3d1;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #78716c;
+  }
+
   /* Automated High-Contrast Safety Nets for Dark Mode */
   html.dark .bg-white {
     background-color: #1c1917;
@@ -62,7 +77,7 @@
 
   html.dark .text-stone-700,
   html.dark .text-stone-600 {
-    color: #d6d3d1;
+    color: #e7e5e4;
   }
 
   html.dark .text-stone-500 {
@@ -73,14 +88,14 @@
   html.dark select,
   html.dark textarea {
     color-scheme: dark;
-    background-color: #1c1917;
-    color: #f5f5f4;
-    border-color: #44403c;
+    background-color: #1c1917 !important;
+    color: #f5f5f4 !important;
+    border-color: #44403c !important;
   }
 
   html.dark input::placeholder,
   html.dark textarea::placeholder {
-    color: #78716c;
+    color: #a8a29e !important;
   }
 }
 

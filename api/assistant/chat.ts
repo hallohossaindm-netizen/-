@@ -3,81 +3,8 @@ import { GoogleGenAI } from '@google/genai';
 const getGeminiClient = (customKey?: string) => {
   const cleanCustom = typeof customKey === 'string' ? customKey.trim() : '';
   const apiKey = cleanCustom || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-import { GoogleGenAI } from '@google/genai';
+  if (!apiKey || !apiKey.trim()) return null;
 
-const getGeminiClient = (customKey?: string) => {
-  const cleanCustom = typeof customKey === 'string' ? customKey.trim() : '';
-    const apiKey = cleanCustom || 
-        process.env.GEMINI_API_KEY || 
-            process.env.VITE_GEMINI_API_KEY;
-              if (!apiKey || !apiKey.trim()) return null;
-                
-                  // সঠিক জেমিনি ক্লায়েন্ট ইনিশিয়ালাইজেশন
-                    return new GoogleGenAI({ apiKey: apiKey.trim() });
-                    };
-                    
-                    const SYSTEM_INSTRUCTION = `
-                    আপনি "তালিমুল কুরআন মহিলা মাদ্রাসা"-এর অফিসিয়াল ইসলামিক এআই সহকারী—"তালিমুল কুরআন সহকারী" (Talimul Quran Assistant)।
-                    পবিত্র কুরআন, সহীহ হাদীস, দৈনন্দিন মাসআলা-মাসায়েল, দুআ-আমল কিংবা আমাদের মাদ্রাসার বিভাগ ও ভর্তি সংক্রান্ত যেকোনো বিষয়ে আপনাকে সাহায্য করতে পারি।
-                    `;
-                    
-                    export default async function handler(req: any, res: any) {
-                      // নিশ্চিত করা হচ্ছে যেন সবসময় JSON ফরম্যাটে রেসপন্স যায়
-                        res.setHeader('Content-Type', 'application/json');
-                        
-                          if (req.method !== 'POST') {
-                              return res.status(405).json({ error: 'Method Not Allowed' });
-                                }
-                                
-                                  try {
-                                      const { message, history, apiKey: bodyApiKey } = req.body || {};
-                                          const customKey = (bodyApiKey || req.headers?.['x-gemini-api-key']) as string | undefined;
-                                          
-                                              if (!message || typeof message !== 'string' || !message.trim()) {
-                                                    return res.status(400).json({ error: 'বার্তা প্রদান করুন।' });
-                                                        }
-                                                        
-                                                            const ai = getGeminiClient(customKey);
-                                                                if (!ai) {
-                                                                      return res.status(500).json({ 
-                                                                              error: 'জেমিনি এআই কি কনফিগার করা হয়নি। এনভায়রনমেন্ট ভেরিয়েবলে GEMINI_API_KEY সেট করুন।' 
-                                                                                    });
-                                                                                        }
-                                                                                        
-                                                                                            // চ্যাট হিস্ট্রি ফরম্যাট করা
-                                                                                                const rawTurns: Array<{ role: 'user' | 'model'; text: string }> = [];
-                                                                                                    if (Array.isArray(history)) {
-                                                                                                          for (const item of history) {
-                                                                                                                  if (item && typeof item.text === 'string' && item.text.trim()) {
-                                                                                                                            const role = item.role === 'model' ? 'model' : 'user';
-                                                                                                                                      rawTurns.push({ role, text: item.text.trim() });
-                                                                                                                                              }
-                                                                                                                                                    }
-                                                                                                                                                        }
-                                                                                                                                                            rawTurns.push({ role: 'user', text: message.trim() });
-                                                                                                                                                            
-                                                                                                                                                                // জেমিনি মডেলকে কল করা (gemini-2.5-flash বা উপযোগী মডেল ব্যবহার)
-                                                                                                                                                                    const response = await ai.models.generateContent({
-                                                                                                                                                                          model: 'gemini-2.5-flash',
-                                                                                                                                                                                contents: rawTurns.map(t => ({
-                                                                                                                                                                                        role: t.role,
-                                                                                                                                                                                                parts: [{ text: t.text }]
-                                                                                                                                                                                                      })),
-                                                                                                                                                                                                            config: {
-                                                                                                                                                                                                                    systemInstruction: SYSTEM_INSTRUCTION,
-                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                              });
-                                                                                                                                                                                                                              
-                                                                                                                                                                                                                                  const replyText = response.text || 'দুঃখিত, এই মুহূর্তে উত্তর দিতে পারছি না।';
-                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                      return res.status(200).json({ reply: replyText });
-                                                                                                                                                                                                                                      
-                                                                                                                                                                                                                                        } catch (error: any) {
-                                                                                                                                                                                                                                            console.error('AI Chat Error:', error);
-                                                                                                                                                                                                                                                return res.status(500).json({ error: error.message || 'সার্ভারে সমস্যা হয়েছে।' });
-                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                                    if (!apiKey || !apiKey.trim()) return null;
   return new GoogleGenAI({
     apiKey: apiKey.trim(),
     httpOptions: {
@@ -104,15 +31,14 @@ const SYSTEM_INSTRUCTION = `
 ২. ফতোয়া ও জটিল মাসআলা সংক্রান্ত সতর্কতা: কোনো জটিল ফিকহি বিরোধ, তালাক/মিরাস বা গভীর ফতোয়া বিষয়ক প্রশ্ন আসলে সাধারণ সিদ্ধান্ত এড়িয়ে চলবেন এবং বলবেন: "এটি একটি জটিল ফতোয়া সংক্রান্ত বিষয়, সঠিক ও সুনির্দিষ্ট সিদ্ধান্তের জন্য আমাদের মাদ্রাসার দারুল ইফতা বা একজন বিজ্ঞ মুফতি সাহেবের সাথে সরাসরি যোগাযোগ করার পরামর্শ দেওয়া হলো।"
 ৩. মাদ্রাসার তথ্য নির্দেশিকা:
 - নাম: তালিমুল কুরআন মহিলা মাদ্রাসা (Talimul Quran Women's Madrasah)
-- অবস্থান: জামিয়া রোড, ব্লক-ডি, রূপনগর, মিরপুর, ঢাকা-১২১৬
-- যোগাযোগের নম্বর: +৮৮০ ১৭১২-৩৪৫৬৭৮, +৮৮০ ১৮১৯-৯৮৭৬৫৪
-- ইমেইল: info@talimulquran-madrasah.edu.bd
+- অবস্থান: সন্দীপ কলোনি, দক্ষিণ পাহাড়তলী, ১নং ওয়ার্ড, ফতেয়াবাদ ৪৩৩৫, চট্টগ্রাম
+- যোগাযোগের নম্বর: 01815074118
 - বিভাগসমূহ:
   ১) মক্তব ও নূরানী বিভাগ (প্রাথমিক আরবী, কায়েদা, মাসনুন দোয়া ও বুনিয়াদী সাধারণ শিক্ষা)
   ২) নাজেরা বিভাগ (বিশুদ্ধ তাজবীদ ও মাখরাজ সহকারে কুরআন তিলাওয়াত প্রশিক্ষণ)
   ৩) হিফজুল কুরআন বিভাগ (আন্তর্জাতিক মানসম্পন্ন পূর্ণাঙ্গ ৩০ পারা হিফজ ও হুসনুত তিলাওয়াত)
-  ৪) কিতাব বিভাগ (মিজান থেকে দাওরায়ে হাদীস - মাস্টার্স সমমান পর্যন্ত শরীয়াহ শিক্ষা)
-- বৈশিষ্ট্য: সম্পূর্ণ অভিজ্ঞ নারী শিক্ষিকা ও হাফেযাদের দ্বারা পাঠদান, শতভাগ শরয়ী পর্দা, নিরাপদ সুসজ্জিত আবাসিক হোস্টেল, পুষ্টিকর খাবার, বেফাকুল মাদারিসিল আরাবিয়া অধিভুক্ত।
+  ৪) কিতাব বিভাগ (দাওরায়ে হাদীস পর্যন্ত শরীয়াহ শিক্ষা)
+- বৈশিষ্ট্য: সম্পূর্ণ অভিজ্ঞ নারী শিক্ষিকা ও হাফেযাদের দ্বারা পাঠদান, শতভাগ শরয়ী পর্দা, নিরাপদ সুসজ্জিত আবাসিক হোস্টেল, পুষ্টিকর খাবার, বেফাকুল মাদারিসিল আরাবিয়া ও নূরানী বোর্ডের অধিভুক্ত।
 - ভর্তি: অনলাইন ফরম পূরণ করে অথবা মাদ্রাসা অফিসে উপস্থিত হয়ে আবেদন করা যায়।
 ৪. কঠোর সীমারেখা (Boundaries):
 - রাজনৈতিক বা দলাদলি সংক্রান্ত কোনো প্রশ্নের উত্তর দিবেন না।
@@ -122,6 +48,8 @@ const SYSTEM_INSTRUCTION = `
 `;
 
 export default async function handler(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json');
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -137,7 +65,7 @@ export default async function handler(req: any, res: any) {
     const ai = getGeminiClient(customKey);
     if (!ai) {
       return res.status(500).json({
-        error: 'জেমিনি এপিআই কি কনফিগার করা হয়নি। Vercel Environment Variables-এ GEMINI_API_KEY সেট করুন।'
+        error: 'জেমিনি এপিআই কি কনফিগার করা হয়নি। Environment Variables-এ GEMINI_API_KEY সেট করুন।'
       });
     }
 
@@ -172,7 +100,7 @@ export default async function handler(req: any, res: any) {
     let reply = '';
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
+        model: 'gemini-2.5-flash',
         contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -181,8 +109,9 @@ export default async function handler(req: any, res: any) {
       });
       reply = response.text || '';
     } catch (primaryErr: any) {
+      console.warn('Primary Gemini call error, trying fallback model', primaryErr?.message);
       const fallbackResponse = await ai.models.generateContent({
-        model: 'gemini-3.1-flash-lite',
+        model: 'gemini-2.5-flash',
         contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -198,6 +127,7 @@ export default async function handler(req: any, res: any) {
 
     return res.status(200).json({ reply });
   } catch (error: any) {
+    console.error('Chat error:', error);
     return res.status(500).json({
       error: 'উত্তর তৈরিতে সাময়িক সমস্যা হয়েছে।',
       details: error?.message || 'Unknown error'
