@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Bell, Pause, Play, CheckCircle2, BookOpen } from 'lucide-react';
 import { MADRASAH_INFO, STATS } from '../data/madrasahData';
+import { CAMPUS_HERO_IMAGE } from '../assets/images';
 
 export const Hero: React.FC = () => {
   const [isMarqueePaused, setIsMarqueePaused] = useState(false);
@@ -92,18 +93,18 @@ export const Hero: React.FC = () => {
 
               {/* Mission Prose */}
               <p className="text-emerald-100/90 text-sm sm:text-base leading-relaxed max-w-2xl font-bangla">
-                কুরআনে কারীমের সহীহ হিফজ, হাদিস শাস্ত্র ও ইলমে দ্বীনের আলোয় নারীদের আলোকিত চরিত্র গঠনে বিশ্বস্ত প্রতিষ্ঠান। সম্পূর্ণ শরয়ী পর্দার ভেতর আধুনিক সুযোগ-সুবিধাসহ একনিষ্ঠ শিক্ষিকাদের তত্ত্বাবধানে আপনার কন্যার আদর্শ ভবিষ্যৎ গড়ে তুলুন।
+                কুরআনে কারীমের সহীহ হিফজ, হাদিস শাস্ত্র ও ইলমে দ্বীনের আলোয় নারীদের আলোকিত চরিত্র গঠনে বিশ্বস্ত প্রতিষ্ঠান। আধুনিক সুযোগ-সুবিধাসহ অভিজ্ঞ শিক্ষক-শিক্ষিকাদের নিবিড় তত্ত্বাবধানে আপনার কন্যার আদর্শ ভবিষ্যৎ গড়ে তুলুন।
               </p>
 
               {/* Key Highlights */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs sm:text-sm text-emerald-100/95 font-bangla">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>সম্পূর্ণ মহিলা শিক্ষিকা দ্বারা পরিচালিত ক্লাস</span>
+                  <span>অভিজ্ঞ শিক্ষক-শিক্ষিকা দ্বারা পরিচালিত ক্লাস</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>নিরাপদ ও সুশৃঙ্খল আবাসিক ছাত্রীবাস</span>
+                  <span>ছাত্রীদের সম্পূর্ণ অনাবাসিক ও হেফজে ছাত্রদের আবাসিক ব্যবস্থা</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
@@ -137,20 +138,37 @@ export const Hero: React.FC = () => {
 
             {/* Right Campus Photography Showcase */}
             <div className="lg:col-span-5 relative">
-              <div className="relative rounded-lg overflow-hidden border border-emerald-700/60 shadow-2xl bg-emerald-950 aspect-[4/3] lg:aspect-auto lg:h-[420px]">
-                <img
-                  src="/src/assets/images/madrasah_campus_hero_1791811339923.jpg"
-                  alt="তালিমুল কুরআন মহিলা মাদ্রাসা মনোরম ক্যাম্পাস প্রাঙ্গণ"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
+              <div className="relative rounded-lg overflow-hidden border border-emerald-700/60 shadow-2xl bg-emerald-950 aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-[420px]">
+                <picture>
+                  <source
+                    type="image/webp"
+                    srcSet={CAMPUS_HERO_IMAGE.srcSet}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 550px"
+                  />
+                  <img
+                    src={CAMPUS_HERO_IMAGE.webpSrc}
+                    alt={CAMPUS_HERO_IMAGE.alt}
+                    width={CAMPUS_HERO_IMAGE.width}
+                    height={CAMPUS_HERO_IMAGE.height}
+                    loading="eager"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src !== CAMPUS_HERO_IMAGE.fallbackJpg) {
+                        target.src = CAMPUS_HERO_IMAGE.fallbackJpg;
+                      }
+                    }}
+                    className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </picture>
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-950/25 to-transparent pointer-events-none" />
+                <div className="absolute bottom-4 left-4 right-4 text-white pointer-events-none">
                   <div className="text-xs uppercase tracking-wider text-amber-300 font-medium">
                     আধুনিক ও সুপরিসর শিক্ষাঙ্গন
                   </div>
-                  <div className="text-sm font-bangla font-semibold text-stone-100 mt-0.5">
-                    পর্দাপূর্ণ মনোরম পরিবেশে ইলম ও আমলের অনন্য মিলনস্থল
+                  <div className="text-sm sm:text-base font-bangla font-semibold text-stone-100 mt-0.5">
+                    মনোরম ও সুশৃঙ্খল পরিবেশে ইলম ও আমলের অনন্য মিলনস্থল
                   </div>
                 </div>
               </div>

@@ -2,9 +2,12 @@
 <html lang="bn">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <meta name="theme-color" content="#064E3B" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
     <title>তালিমুল কুরআন মহিলা মাদ্রাসা | Talimul Quran Women's Madrasah</title>
     <meta name="description" content="তালিমুল কুরআন মহিলা মাদ্রাসার অফিশিয়াল ওয়েবসাইট — শিক্ষাই আলো, কুরআনই মুক্তি। নাজেরা, হিফজুল কুরআন, কিতাব ও মক্তব বিভাগের পূর্ণাঙ্গ তথ্য ও অনলাইন ভর্তি।" />
     <meta property="og:title" content="তালিমুল কুরআন মহিলা মাদ্রাসা | Talimul Quran Women's Madrasah" />
@@ -16,6 +19,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Hind+Siliguri:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       (function() {
+        try {
+          // Automatic Mobile/Standalone Redirect:
+          // If visited directly via the internal dev URL in a mobile browser tab (outside AI Studio iframe),
+          // immediately redirect to the public shared URL so mobile users can enter with zero restrictions.
+          if (window.location.hostname && window.location.hostname.indexOf('ais-dev-') === 0) {
+            if (window.self === window.top) {
+              var targetHost = window.location.hostname.replace('ais-dev-', 'ais-pre-');
+              window.location.replace(window.location.protocol + '//' + targetHost + window.location.pathname + window.location.search + window.location.hash);
+              return;
+            }
+          }
+        } catch (e) {}
+
         try {
           var saved = localStorage.getItem('tqwm_theme_mode');
           var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;

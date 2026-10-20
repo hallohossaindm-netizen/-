@@ -88,6 +88,35 @@ export interface GalleryItem {
   category: 'campus' | 'classroom' | 'library' | 'event';
   categoryLabel: string;
   imageUrl: string;
+  webpUrl?: string;
+  srcSet?: string;
+  width?: number;
+  height?: number;
   caption: string;
+}
+
+export interface AdmitCardSchedule {
+  date: string;
+  day: string;
+  time: string;
+  subject: string;
+  roomNo: string;
+}
+
+export interface AdmitCardData {
+  roll: string;
+  registrationNo: string;
+  studentName: string;
+  studentNameEn?: string;
+  fatherName: string;
+  motherName?: string;
+  department: string;
+  examName: string;
+  session: string;
+  examCenter: string;
+  residentType: 'residential' | 'non_residential';
+  schedule: AdmitCardSchedule[];
+  issueDate: string;
+  instructions: string[];
 }
 

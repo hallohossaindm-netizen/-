@@ -13,11 +13,11 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss()],
     base: '/',
     esbuild: {
-      target: 'es2015',
+      target: 'es2020',
     },
     build: {
-      target: 'es2015',
-      cssTarget: 'chrome61',
+      target: 'es2020',
+      cssTarget: 'chrome80',
     },
     resolve: {
       alias: {

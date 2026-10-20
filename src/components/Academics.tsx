@@ -69,7 +69,16 @@ export const Academics: React.FC = () => {
                   </span>
                 </div>
                 <div>
-                  <div className="font-bold font-bangla text-base">{dept.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="font-bold font-bangla text-base">{dept.name}</div>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bangla font-semibold ${
+                      dept.id === 'hifz'
+                        ? isActive ? 'bg-amber-400 text-stone-900' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                        : isActive ? 'bg-stone-700 text-stone-200' : 'bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+                    }`}>
+                      {dept.id === 'hifz' ? 'আবাসিক (ছাত্র)' : 'অনাবাসিক'}
+                    </span>
+                  </div>
                   <div className={`text-xs mt-0.5 font-arabic ${isActive ? 'text-emerald-200' : 'text-stone-500 dark:text-stone-400'}`}>
                     {dept.nameArabic}
                   </div>
@@ -85,10 +94,18 @@ export const Academics: React.FC = () => {
             {/* Overview & Key Features */}
             <div className="lg:col-span-7 space-y-6">
               <div>
-                <div className="flex items-center gap-3 text-xs text-stone-600 dark:text-stone-400 font-bangla">
+                <div className="flex items-center gap-3 text-xs text-stone-600 dark:text-stone-400 font-bangla flex-wrap">
                   <span>কোর্স মেয়াদ: <strong className="text-stone-900 dark:text-stone-100">{selectedDept.duration}</strong></span>
                   <span aria-hidden="true">·</span>
                   <span>বয়সসীমা: <strong className="text-stone-900 dark:text-stone-100">{selectedDept.ageLimit}</strong></span>
+                  <span aria-hidden="true">·</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    selectedDept.id === 'hifz'
+                      ? 'bg-emerald-100 text-[#064E3B] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                      : 'bg-stone-200 text-stone-800 dark:bg-stone-800 dark:text-stone-300 border border-stone-300 dark:border-stone-700'
+                  }`}>
+                    {selectedDept.id === 'hifz' ? '🏡 ছেলেদের একমাত্র আবাসিক বিভাগ' : '🎒 সম্পূর্ণ অনাবাসিক বিভাগ (ডে-কেয়ার)'}
+                  </span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold font-bangla text-stone-900 dark:text-stone-100 mt-2">
                   {selectedDept.name} ({selectedDept.nameArabic})
@@ -161,7 +178,7 @@ export const Academics: React.FC = () => {
           <div className="max-w-2xl mx-auto text-center mb-8">
             <div className="inline-flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
               <Clock className="w-3.5 h-3.5" />
-              <span>আবাসিক ছাত্রীদের সুশৃঙ্খল দিনলিপি</span>
+              <span>শিক্ষার্থীদের সুশৃঙ্খল দিনলিপি ও পাঠপরিকল্পনা</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-bold font-bangla text-stone-900 dark:text-stone-100 mt-1">
               দৈনিক রুটিন ও সময়সূচী

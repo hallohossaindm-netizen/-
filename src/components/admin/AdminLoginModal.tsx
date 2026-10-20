@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Eye, EyeOff, ShieldCheck, AlertCircle, X, CheckCircle } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ShieldCheck, AlertCircle, X, CheckCircle, Send, KeyRound } from 'lucide-react';
 import { useMadrasah } from '../../context/MadrasahContext';
 
 interface AdminLoginModalProps {
@@ -9,35 +9,76 @@ interface AdminLoginModalProps {
 }
 
 export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { loginAdmin, hasCustomPassword } = useMadrasah();
+  const { loginAdmin, sendPasswordReset } = useMadrasah();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setResetMessage(null);
 
-    if (!password.trim()) {
-      setError('অনুগ্রহ করে এডমিন পাসওয়ার্ড লিখুন।');
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail) {
+      setError('অনুগ্রহ করে আপনার অনুমোদিত এডমিন ইমেইল লিখুন।');
+      return;
+    }
+
+    if (!cleanPassword) {
+      setError('অনুগ্রহ করে আপনার ফায়ারবেস পাসওয়ার্ড লিখুন।');
       return;
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const res = loginAdmin(password);
-      setIsSubmitting(false);
+    try {
+      const res = await loginAdmin(cleanEmail, cleanPassword);
       if (res.success) {
+        setEmail('');
         setPassword('');
         setError(null);
         onSuccess();
       } else {
-        setError(res.message || 'ভুল পাসওয়ার্ড।');
+        setError(res.message || 'লগইন ব্যর্থ হয়েছে।');
       }
-    }, 250);
+    } catch (err: any) {
+      setError(err?.message || 'লগইনে অপ্রত্যাশিত সমস্যা হয়েছে।');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    setError(null);
+    setResetMessage(null);
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setError('পাসওয়ার্ড রিসেট লিংক পাঠাতে অনুগ্রহ করে উপরে আপনার ইমেইলটি লিখুন।');
+      return;
+    }
+
+    setIsSendingReset(true);
+    try {
+      const res = await sendPasswordReset(cleanEmail);
+      if (res.success) {
+        setResetMessage(res.message || `${cleanEmail} ঠিকানায় রিসেট লিংক পাঠানো হয়েছে।`);
+      } else {
+        setError(res.message || 'পাসওয়ার্ড রিসেট লিংক পাঠানো যায়নি।');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'পাসওয়ার্ড রিসেট লিংক পাঠাতে সমস্যা হয়েছে।');
+    } finally {
+      setIsSendingReset(false);
+    }
   };
 
   return (
@@ -75,7 +116,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
             </div>
           </div>
           <p className="text-xs text-emerald-100/90 font-bangla mt-2">
-            তালিমুল কুরআন মহিলা মাদ্রাসার নোটিশ প্রকাশ, পরীক্ষার ফলাফল আপলোড এবং অনলাইন ভর্তি আবেদন নিয়ন্ত্রণের সুরক্ষিত ড্যাশবোর্ড।
+            তালিমুল কুরআন মহিলা মাদ্রাসার Firebase Authentication দ্বারা সুরক্ষিত প্রশাসনিক নিয়ন্ত্রণ ড্যাশবোর্ড।
           </p>
         </div>
 
@@ -88,10 +129,54 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
             </div>
           )}
 
+          {resetMessage && (
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-lg flex items-start gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-bangla">
+              <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+              <span>{resetMessage}</span>
+            </div>
+          )}
+
+          {/* Admin Email Field */}
           <div>
             <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 font-bangla mb-1.5">
-              এডমিন সিকিউরিটি পাসওয়ার্ড <span className="text-red-500">*</span>
+              এডমিন ইমেইল (Firebase Email) <span className="text-red-500">*</span>
             </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400 dark:text-stone-500">
+                <Mail className="w-4 h-4" />
+              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder="admin@talimulquran-madrasah.edu.bd"
+                autoFocus
+                autoComplete="email"
+                required
+                className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B] focus:border-transparent font-sans"
+              />
+            </div>
+          </div>
+
+          {/* Admin Password Field */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 font-bangla">
+                এডমিন পাসওয়ার্ড (Firebase Password) <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                disabled={isSendingReset}
+                className="text-[11px] text-[#064E3B] dark:text-emerald-400 hover:underline font-bangla cursor-pointer flex items-center gap-1 disabled:opacity-50"
+              >
+                <KeyRound className="w-3 h-3" />
+                <span>{isSendingReset ? 'পাঠানো হচ্ছে...' : 'পাসওয়ার্ড রিসেট?'}</span>
+              </button>
+            </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400 dark:text-stone-500">
                 <Lock className="w-4 h-4" />
@@ -103,8 +188,9 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
                   setPassword(e.target.value);
                   if (error) setError(null);
                 }}
-                placeholder="পাসওয়ার্ড লিখুন..."
-                autoFocus
+                placeholder="আপনার পাসওয়ার্ড লিখুন..."
+                autoComplete="current-password"
+                required
                 className="w-full pl-9 pr-10 py-2.5 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B] focus:border-transparent font-sans"
               />
               <button
@@ -116,19 +202,14 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <div className="mt-2 flex items-center justify-between text-[11px] font-bangla">
-              {hasCustomPassword ? (
-                <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                  <span>আপনার পরিবর্তিত নতুন পাসওয়ার্ড লিখুন (ডিফল্ট পাসওয়ার্ড ওভাররাইট হয়েছে)</span>
-                </span>
-              ) : (
-                <>
-                  <span className="text-stone-500 dark:text-stone-400">ডিফল্ট মাস্টার পাসওয়ার্ড: <code className="bg-stone-200 dark:bg-stone-800 px-1.5 py-0.5 rounded text-stone-800 dark:text-amber-300 font-sans font-semibold border border-stone-300 dark:border-stone-700">admin1234</code></span>
-                  <span className="text-[10px] text-stone-400 dark:text-stone-500">পরিবর্তনযোগ্য</span>
-                </>
-              )}
-            </div>
+          </div>
+
+          {/* Security Notice (Zero pills, high contrast) */}
+          <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/60 text-[11px] text-emerald-950 dark:text-emerald-300 font-bangla flex items-start gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">
+              Google Firebase Authentication দ্বারা সুরক্ষিত। শুধুমাত্র মাদ্রাসার অনুমোদিত অ্যাডমিন একাউন্ট দিয়ে ড্যাশবোর্ডে প্রবেশ করা যাবে।
+            </span>
           </div>
 
           <div className="pt-2 flex items-center gap-3">
@@ -145,7 +226,10 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
               className="flex-1 py-2.5 px-4 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 font-bangla shadow-sm disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
-                <span>যাচাই হচ্ছে...</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>যাচাই হচ্ছে...</span>
+                </div>
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 text-amber-300" />

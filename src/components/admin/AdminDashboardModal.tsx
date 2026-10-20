@@ -25,11 +25,15 @@ import {
   Check,
   ShieldCheck,
   Building,
-  GraduationCap
+  GraduationCap,
+  QrCode,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import { useMadrasah } from '../../context/MadrasahContext';
-import { NoticeItem, StudentResult, AdmissionApplication, AdmissionStatus, DepartmentId } from '../../types';
+import { NoticeItem, StudentResult, AdmissionApplication, AdmissionStatus, DepartmentId, AdmitCardData, AdmitCardSchedule } from '../../types';
 import { MADRASAH_INFO } from '../../data/madrasahData';
+import { AdmitCardView } from '../AdmitCardView';
 
 interface AdminDashboardModalProps {
   isOpen: boolean;
@@ -45,17 +49,26 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
     results,
     addOrUpdateResult,
     deleteResult,
+    admitCards,
+    addOrUpdateAdmitCard,
+    deleteAdmitCard,
     applications,
     updateApplicationStatus,
     deleteApplication,
+    isAdmissionOpen,
+    toggleAdmissionStatus,
     logoutAdmin,
     changeAdminPassword,
+    sendPasswordReset,
     resetAllData,
     adminUsername,
-    hasCustomPassword
+    adminEmail,
+    hasCustomPassword,
+    isAdminLoggedIn,
+    authLoading
   } = useMadrasah();
 
-  const [activeTab, setActiveTab] = useState<'admissions' | 'notices' | 'results' | 'settings'>('admissions');
+  const [activeTab, setActiveTab] = useState<'admissions' | 'notices' | 'results' | 'admit_cards' | 'settings'>('admissions');
 
   // Admissions state
   const [appSearch, setAppSearch] = useState('');
@@ -120,7 +133,76 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
     }, 3000);
   };
 
+  // Admit Cards state
+  const [admitSearch, setAdmitSearch] = useState('');
+  const [admitDeptFilter, setAdmitDeptFilter] = useState<'all' | string>('all');
+  const [selectedAdmitForView, setSelectedAdmitForView] = useState<AdmitCardData | null>(null);
+  const [isAdmitFormOpen, setIsAdmitFormOpen] = useState(false);
+  const [editingAdmitCard, setEditingAdmitCard] = useState<AdmitCardData | null>(null);
+  const [admitFormData, setAdmitFormData] = useState<AdmitCardData>({
+    roll: '',
+    registrationNo: '',
+    studentName: '',
+    studentNameEn: '',
+    fatherName: '',
+    motherName: '',
+    department: 'হিফজুল কুরআন বিভাগ',
+    examName: 'বার্ষিক মূল্যায়ন পরীক্ষা ২০২৬',
+    session: '২০২৫-২০২৬',
+    examCenter: 'তালিমুল কুরআন মহিলা মাদ্রাসা মূল মিলনায়তন ও হলরুম, ফতেয়াবাদ, চট্টগ্রাম',
+    residentType: 'residential',
+    issueDate: '১৫ অক্টোবর ২০২৬',
+    schedule: [
+      { date: '২৫ অক্টোবর ২০২৬', day: 'রবিবার', time: 'সকাল ৯:০০ - ১২:০০', subject: 'হিফজুল কুরআন ১ম ১০ পারা ও তাজবীদ', roomNo: 'হল-১' },
+      { date: '২৭ অক্টোবর ২০২৬', day: 'মঙ্গলবার', time: 'সকাল ৯:০০ - ১২:০০', subject: 'হিফজুল কুরআন ২য় ১০ পারা ও লাহজ', roomNo: 'হল-১' },
+      { date: '২৯ অক্টোবর ২০২৬', day: 'বৃহস্পতিবার', time: 'সকাল ৯:০০ - ১২:০০', subject: 'জরুরি মাসনুন আমল ও ফিকহ', roomNo: 'হল-১' }
+    ],
+    instructions: [
+      'পরীক্ষা শুরুর কমপক্ষে ১৫ মিনিট পূর্বে নির্ধারিত আসন গ্রহণ করতে হবে।',
+      'প্রবেশপত্র ও পরীক্ষা রেজিস্ট্রেশন রসিদ সঙ্গে রাখা বাধ্যতামূলক।',
+      'মোবাইল ফোন বা নিষিদ্ধ সামগ্রী বহন সম্পূর্ণ নিষিদ্ধ।'
+    ]
+  });
+
+  // Password actions state
+  const [isChangingPass, setIsChangingPass] = useState(false);
+  const [isSendingResetEmail, setIsSendingResetEmail] = useState(false);
+
   if (!isOpen) return null;
+
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="bg-[#FAF9F5] dark:bg-stone-900 rounded-xl p-8 max-w-sm w-full border border-stone-200 dark:border-stone-800 text-center space-y-4">
+          <div className="w-10 h-10 border-3 border-emerald-800 border-t-amber-400 rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-bangla text-stone-700 dark:text-stone-300">Firebase এডমিন সেশন যাচাই করা হচ্ছে...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdminLoggedIn) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="bg-[#FAF9F5] dark:bg-stone-900 rounded-xl p-6 max-w-md w-full border border-red-300 dark:border-red-900 shadow-2xl text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-bangla">অননুমোদিত প্রবেশাধিকার</h3>
+          <p className="text-xs text-stone-600 dark:text-stone-300 font-bangla leading-relaxed">
+            এই ড্যাশবোর্ডটি শুধুমাত্র অনুমোদিত মাদ্রাসার Firebase এডমিনের জন্য সংরক্ষিত। সাধারণ ব্যবহারকারী বা অননুমোদিত অ্যাকাউন্টের অ্যাক্সেস সম্পূর্ণ নিষিদ্ধ।
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-lg text-xs font-semibold font-bangla transition-colors cursor-pointer"
+          >
+            প্রবেশদ্বার বন্ধ করুন
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Filtered Admissions
   const filteredApps = applications.filter((app) => {
@@ -147,6 +229,21 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
   const filteredResults = resultList.filter((r) => {
     const q = resultSearch.toLowerCase().trim();
     return !q || r.roll.toLowerCase().includes(q) || r.name.toLowerCase().includes(q) || r.department.toLowerCase().includes(q);
+  });
+
+
+
+  const admitCardList = Object.values(admitCards);
+  const filteredAdmitCards = admitCardList.filter((card) => {
+    const q = admitSearch.toLowerCase().trim();
+    const matchesDept = admitDeptFilter === 'all' || card.department === admitDeptFilter;
+    const matchesSearch =
+      !q ||
+      card.roll.toLowerCase().includes(q) ||
+      card.registrationNo.toLowerCase().includes(q) ||
+      card.studentName.toLowerCase().includes(q) ||
+      (card.studentNameEn && card.studentNameEn.toLowerCase().includes(q));
+    return matchesDept && matchesSearch;
   });
 
   // KPI counts
@@ -317,23 +414,132 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
     setResultFormData({ ...resultFormData, subjects: updated });
   };
 
-  // Change Password
-  const handleChangePasswordSubmit = (e: React.FormEvent) => {
+  // Admit Card Handlers
+  const handleOpenNewAdmitCard = () => {
+    setEditingAdmitCard(null);
+    setAdmitFormData({
+      roll: '',
+      registrationNo: `TQWM-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      studentName: '',
+      studentNameEn: '',
+      fatherName: '',
+      motherName: '',
+      department: 'হিফজুল কুরআন বিভাগ',
+      examName: 'বার্ষিক মূল্যায়ন পরীক্ষা ২০২৬',
+      session: '২০২৫-২০২৬',
+      examCenter: 'তালিমুল কুরআন মহিলা মাদ্রাসা মূল মিলনায়তন ও হলরুম, ফতেয়াবাদ, চট্টগ্রাম',
+      residentType: 'residential',
+      issueDate: '১৫ অক্টোবর ২০২৬',
+      schedule: [
+        { date: '২৫ অক্টোবর ২০২৬', day: 'রবিবার', time: 'সকাল ৯:০০ - ১২:০০', subject: 'হিফজুল কুরআন ১ম ১০ পারা ও তাজবীদ', roomNo: 'হল-১' },
+        { date: '২৭ অক্টোবর ২০২৬', day: 'মঙ্গলবার', time: 'সকাল ৯:০০ - ১২:০০', subject: 'হিফজুল কুরআন ২য় ১০ পারা ও লাহজ', roomNo: 'হল-১' },
+        { date: '২৯ অক্টোবর ২০২৬', day: 'বৃহস্পতিবার', time: 'সকাল ৯:০০ - ১২:০০', subject: 'জরুরি মাসনুন আমল ও ফিকহ', roomNo: 'হল-১' }
+      ],
+      instructions: [
+        'পরীক্ষা শুরুর কমপক্ষে ১৫ মিনিট পূর্বে নির্ধারিত আসন গ্রহণ করতে হবে।',
+        'প্রবেশপত্র ও পরীক্ষা রেজিস্ট্রেশন রসিদ সঙ্গে রাখা বাধ্যতামূলক।',
+        'মোবাইল ফোন বা নিষিদ্ধ সামগ্রী বহন সম্পূর্ণ নিষিদ্ধ।'
+      ]
+    });
+    setIsAdmitFormOpen(true);
+  };
+
+  const openEditAdmitModal = (card: AdmitCardData) => {
+    setEditingAdmitCard(card);
+    setAdmitFormData({ ...card });
+    setIsAdmitFormOpen(true);
+  };
+
+  const handleSaveAdmitCard = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!admitFormData.roll.trim() || !admitFormData.studentName.trim()) {
+      alert('রোল এবং শিক্ষার্থীর নাম আবশ্যক');
+      return;
+    }
+
+    // Strictly enforce requirement 3: only Hifz is residential, all others are non-residential
+    const isHifz = admitFormData.department.includes('হিফজ') || admitFormData.department.includes('Hifz');
+    const finalCard: AdmitCardData = {
+      ...admitFormData,
+      roll: admitFormData.roll.trim(),
+      residentType: isHifz ? 'residential' : 'non_residential'
+    };
+
+    addOrUpdateAdmitCard(finalCard);
+    setIsAdmitFormOpen(false);
+    showToast(`রোল ${finalCard.roll}-এর প্রবেশপত্র সফলভাবে সংরক্ষিত ও কিউআর কোড প্রস্তুত হয়েছে!`);
+  };
+
+  const handleDeleteAdmitCard = (roll: string) => {
+    if (confirm(`আপনি কি নিশ্চিত যে রোল ${roll}-এর প্রবেশপত্র মুছে ফেলতে চান?`)) {
+      deleteAdmitCard(roll);
+      showToast(`রোল ${roll}-এর প্রবেশপত্র মুছে ফেলা হয়েছে!`);
+    }
+  };
+
+  const addAdmitScheduleRow = () => {
+    setAdmitFormData({
+      ...admitFormData,
+      schedule: [
+        ...admitFormData.schedule,
+        { date: '২৮ অক্টোবর ২০২৬', day: 'বুধবার', time: 'সকাল ৯:০০ - ১২:০০', subject: 'নতুন পরীক্ষার বিষয়', roomNo: 'হল-১' }
+      ]
+    });
+  };
+
+  const removeAdmitScheduleRow = (idx: number) => {
+    if (admitFormData.schedule.length <= 1) return;
+    setAdmitFormData({
+      ...admitFormData,
+      schedule: admitFormData.schedule.filter((_, i) => i !== idx)
+    });
+  };
+
+  const handleAdmitScheduleChange = (idx: number, field: keyof AdmitCardSchedule, val: string) => {
+    const updated = [...admitFormData.schedule];
+    updated[idx] = { ...updated[idx], [field]: val };
+    setAdmitFormData({ ...admitFormData, schedule: updated });
+  };
+
+
+
+  const handleChangePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordMsg(null);
     if (newPassword !== confirmPassword) {
       setPasswordMsg({ text: 'নতুন পাসওয়ার্ড ও নিশ্চিতকরণ পাসওয়ার্ড মেলেনি।', isError: true });
       return;
     }
-    const res = changeAdminPassword(oldPassword, newPassword);
-    if (res.success) {
-      setPasswordMsg({ text: res.message || 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!', isError: false });
-      setOldPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!');
-    } else {
-      setPasswordMsg({ text: res.message || 'ব্যর্থ হয়েছে!', isError: true });
+    setIsChangingPass(true);
+    try {
+      const res = await changeAdminPassword(oldPassword, newPassword);
+      if (res.success) {
+        setPasswordMsg({ text: res.message || 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!', isError: false });
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!');
+      } else {
+        setPasswordMsg({ text: res.message || 'ব্যর্থ হয়েছে!', isError: true });
+      }
+    } finally {
+      setIsChangingPass(false);
+    }
+  };
+
+  const handleSendResetEmail = async () => {
+    setIsSendingResetEmail(true);
+    setPasswordMsg(null);
+    try {
+      const res = await sendPasswordReset();
+      if (res.success) {
+        setPasswordMsg({ text: res.message || 'পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে!', isError: false });
+        showToast('পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে!');
+      } else {
+        setPasswordMsg({ text: res.message || 'ব্যর্থ হয়েছে!', isError: true });
+      }
+    } finally {
+      setIsSendingResetEmail(false);
     }
   };
 
@@ -378,8 +584,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                 <h2 className="text-base sm:text-lg font-bold font-bangla text-white">
                   প্রশাসনিক ড্যাশবোর্ড ও নিয়ন্ত্রণ প্যানেল
                 </h2>
-                <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[11px] bg-emerald-800/80 text-amber-300 font-sans border border-emerald-700/50">
-                  {adminUsername}
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] bg-emerald-800/80 text-amber-300 font-sans border border-emerald-700/50">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>{adminEmail || adminUsername}</span>
                 </span>
               </div>
               <p className="text-[11px] text-emerald-200/90 font-bangla hidden sm:block">
@@ -465,6 +672,19 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
             </button>
 
             <button
+              onClick={() => setActiveTab('admit_cards')}
+              className={`px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all font-bangla flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                activeTab === 'admit_cards'
+                  ? 'bg-white text-[#064E3B] shadow-xs font-bold border border-stone-300'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4 text-emerald-700" />
+              <span>প্রবেশপত্র প্রদান ও QR</span>
+              <span className="text-[11px] text-stone-500 font-sans">({admitCardList.length})</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('settings')}
               className={`px-3.5 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all font-bangla flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                 activeTab === 'settings'
@@ -479,10 +699,72 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
         </div>
 
         {/* Tab Body Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#FAF9F5]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#FAF9F5] dark:bg-stone-950">
           {/* TAB 1: ADMISSIONS MANAGEMENT */}
           {activeTab === 'admissions' && (
             <div className="space-y-4">
+              {/* Admission Live Control Banner */}
+              <div className={`p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors ${
+                isAdmissionOpen
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800'
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                    isAdmissionOpen
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-rose-600 text-white'
+                  }`}>
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs uppercase font-bold tracking-wider text-stone-700 dark:text-stone-300">ভর্তি কার্যক্রম নিয়ন্ত্রণ:</span>
+                      {isAdmissionOpen ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-200 text-emerald-900 border border-emerald-400">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                          চালু আছে (OPEN)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-200 text-rose-900 border border-rose-400">
+                          <span className="w-2 h-2 rounded-full bg-rose-600" />
+                          বর্তমানে বন্ধ (CLOSED)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-stone-600 dark:text-stone-300 font-bangla mt-1">
+                      {isAdmissionOpen
+                        ? 'অনলাইন ভর্তি ফরম চালু রয়েছে। শিক্ষার্থীরা ওয়েবসাইটে সরাসরি আবেদন ফরম পূরণ ও ডিজিটাল স্লিপ সংগ্রহ করতে পারছে।'
+                        : 'অনলাইন ভর্তি ফরম বন্ধ রয়েছে। ওয়েবসাইটে সাময়িক স্থগিতের নোটিশ ও অফিস হেল্পলাইন প্রদর্শিত হচ্ছে।'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleAdmissionStatus();
+                    showToast(isAdmissionOpen ? 'অনলাইন ভর্তি আবেদন গ্রহণ বন্ধ করা হয়েছে!' : 'অনলাইন ভর্তি আবেদন পুনরায় চালু করা হয়েছে!');
+                  }}
+                  className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ${
+                    isAdmissionOpen
+                      ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                      : 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                  }`}
+                >
+                  {isAdmissionOpen ? (
+                    <>
+                      <X className="w-4 h-4" />
+                      <span>অনলাইন ভর্তি বন্ধ করুন</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>অনলাইন ভর্তি চালু করুন</span>
+                    </>
+                  )}
+                </button>
+              </div>
               {/* Controls bar */}
               <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-1">
@@ -840,6 +1122,161 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
             </div>
           )}
 
+          {/* TAB: ADMIT CARD MANAGEMENT & ISSUANCE */}
+          {activeTab === 'admit_cards' && (
+            <div className="space-y-4 font-bangla">
+              {/* Controls bar */}
+              <div className="bg-white dark:bg-stone-900 p-4 rounded-xl border border-stone-200 dark:border-stone-800 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="text"
+                      value={admitSearch}
+                      onChange={(e) => setAdmitSearch(e.target.value)}
+                      placeholder="রোল, রেজিস্ট্রেশন বা নাম দিয়ে খুঁজুন..."
+                      className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                    />
+                  </div>
+
+                  <select
+                    value={admitDeptFilter}
+                    onChange={(e) => setAdmitDeptFilter(e.target.value)}
+                    className="py-2 px-3 text-xs bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-700 dark:text-stone-300 focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                  >
+                    <option value="all">সব বিভাগ ({admitCardList.length})</option>
+                    <option value="হিফজুল কুরআন বিভাগ">হিফজুল কুরআন (আবাসিক)</option>
+                    <option value="নাজেরা বিভাগ">নাজেরা বিভাগ (অনাবাসিক)</option>
+                    <option value="কিতাব বিভাগ (দাওরায়ে হাদীস)">কিতাব বিভাগ (অনাবাসিক)</option>
+                    <option value="মক্তব ও নূরানী বিভাগ">নূরানী বিভাগ (অনাবাসিক)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleOpenNewAdmitCard}
+                    className="px-4 py-2 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 text-amber-300" />
+                    <span>নতুন প্রবেশপত্র ইস্যু করুন</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Policy Indicator Box */}
+              <div className="bg-amber-50/80 dark:bg-amber-950/30 p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-bold">মাদ্রাসার প্রাতিষ্ঠানিক নীতিমালা ও অটোমেটিক কিউআর কোড:</span>
+                  <p className="text-[11px] text-stone-600 dark:text-stone-300">
+                    আমাদের মাদ্রাসায় শুধুমাত্র <strong>হিফজুল কুরআন বিভাগ আবাসিক</strong>, বাকি সকল বিভাগ (নাজেরা, কিতাব ও নূরানী) <strong>অনাবাসিক</strong>। প্রবেশপত্রে স্বয়ংক্রিয়ভাবে কিউআর কোড যুক্ত হবে যা যেকোনো মোবাইল ক্যামেরা দিয়ে স্ক্যান করে সত্যতা নিশ্চিত করা যায়।
+                  </p>
+                </div>
+              </div>
+
+              {/* Admit Cards List */}
+              {filteredAdmitCards.length === 0 ? (
+                <div className="bg-white dark:bg-stone-900 p-12 text-center rounded-xl border border-stone-200 dark:border-stone-800 space-y-3">
+                  <GraduationCap className="w-12 h-12 text-stone-300 mx-auto" />
+                  <h4 className="text-stone-700 dark:text-stone-300 font-semibold text-sm">কোনো প্রবেশপত্র পাওয়া যায়নি</h4>
+                  <p className="text-xs text-stone-500 max-w-md mx-auto">
+                    অনুসন্ধান পরিবর্তন করুন অথবা নতুন ছাত্রীর জন্য প্রবেশপত্র ইস্যু করুন।
+                  </p>
+                  <button
+                    onClick={handleOpenNewAdmitCard}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#064E3B] text-white text-xs font-semibold rounded-lg hover:bg-[#043d2e] transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 text-amber-300" />
+                    <span>প্রথম প্রবেশপত্র তৈরি করুন</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredAdmitCards.map((card) => (
+                    <div
+                      key={card.roll}
+                      className="bg-white dark:bg-stone-900 p-5 rounded-xl border border-stone-200 dark:border-stone-800 hover:border-emerald-600/50 shadow-xs transition-all space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-[#064E3B] text-amber-300">
+                              রোল: {card.roll}
+                            </span>
+                            <span className="text-xs font-mono text-stone-500">
+                              {card.registrationNo}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              card.residentType === 'residential'
+                                ? 'bg-emerald-100 text-[#064E3B] border border-emerald-300'
+                                : 'bg-stone-100 text-stone-700 border border-stone-300'
+                            }`}>
+                              {card.residentType === 'residential' ? '🏡 আবাসিক (হেফজ)' : '🎒 অনাবাসিক'}
+                            </span>
+                          </div>
+
+                          <h4 className="text-base font-bold text-stone-900 dark:text-stone-100 pt-1">
+                            {card.studentName} {card.studentNameEn && <span className="text-xs font-normal font-sans text-stone-500">({card.studentNameEn})</span>}
+                          </h4>
+                          <p className="text-xs text-stone-600 dark:text-stone-400">
+                            পিতা: {card.fatherName} • বিভাগ: <strong className="text-[#064E3B] dark:text-emerald-400">{card.department}</strong>
+                          </p>
+                        </div>
+
+                        <div className="w-12 h-12 bg-stone-100 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 flex flex-col items-center justify-center shrink-0">
+                          <QrCode className="w-6 h-6 text-[#064E3B] dark:text-emerald-400" />
+                          <span className="text-[9px] text-stone-500">QR ভেরিফাইড</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-stone-50 dark:bg-stone-800/60 p-3 rounded-lg border border-stone-200 dark:border-stone-700 text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-stone-500">পরীক্ষার নাম:</span>
+                          <span className="font-semibold text-stone-800 dark:text-stone-200">{card.examName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-stone-500">পরীক্ষার বিষয় সংখ্যা:</span>
+                          <span className="font-semibold">{card.schedule?.length || 0} টি বিষয়</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-stone-500">ইস্যুর তারিখ:</span>
+                          <span className="font-sans text-stone-600 dark:text-stone-300">{card.issueDate}</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-between gap-2 border-t border-stone-200 dark:border-stone-800 text-xs">
+                        <button
+                          onClick={() => setSelectedAdmitForView(card)}
+                          className="px-3.5 py-1.5 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-amber-300" />
+                          <span>প্রবেশপত্র দেখুন ও প্রিন্ট</span>
+                        </button>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEditAdmitModal(card)}
+                            className="p-1.5 text-stone-500 hover:text-[#064E3B] hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer"
+                            title="এডিট করুন"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAdmitCard(card.roll)}
+                            className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                            title="মুছে ফেলুন"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB 4: SETTINGS & SECURITY */}
           {activeTab === 'settings' && (
             <div className="max-w-2xl mx-auto space-y-6">
@@ -852,36 +1289,40 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                     </div>
                     <div>
                       <h4 className="text-base font-bold text-stone-900 dark:text-stone-100 font-bangla">
-                        এডমিন পাসওয়ার্ড পরিবর্তন
+                        এডমিন নিরাপত্তা ও পাসওয়ার্ড
                       </h4>
                       <p className="text-xs text-stone-500 dark:text-stone-400 font-bangla">
-                        নিরাপত্তার স্বার্থে নিয়মিত আপনার এডমিন পাসওয়ার্ড পরিবর্তন করুন।
+                        Google Firebase Authentication দ্বারা সরাসরি ক্লাউডে সুরক্ষিত ও এনক্রিপ্টেড।
                       </p>
                     </div>
                   </div>
 
                   {/* Password status badge */}
                   <div>
-                    {hasCustomPassword ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-bangla">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>কাস্টম পাসওয়ার্ড সক্রিয়</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-bangla">
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                        <span>ডিফল্ট পাসওয়ার্ড (admin1234) সক্রিয়</span>
-                      </span>
-                    )}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-bangla">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Firebase Auth সক্রিয়</span>
+                    </span>
                   </div>
                 </div>
 
-                <div className="p-3 bg-stone-50 dark:bg-stone-800/60 rounded-lg border border-stone-200 dark:border-stone-700/60 text-xs text-stone-600 dark:text-stone-300 font-bangla space-y-1">
-                  <p className="font-semibold text-stone-800 dark:text-stone-200">
-                    💡 পাসওয়ার্ড ওভাররাইট নীতি:
-                  </p>
-                  <p>
-                    নতুন পাসওয়ার্ড সেট করার সাথে সাথে তা ব্রাউজারের সিকিউর স্টোরেজে সেভ হয়ে যাবে এবং ডিফল্ট <code className="bg-stone-200 dark:bg-stone-700 px-1 py-0.5 rounded font-sans text-stone-800 dark:text-amber-300">admin1234</code> পাসওয়ার্ডটি সম্পূর্ণ অকার্যকর (ওভাররাইট) হয়ে যাবে। পরবর্তীতে শুধুমাত্র আপনার দেওয়া নতুন পাসওয়ার্ড দিয়েই এডমিন প্যানেলে লগইন করা যাবে।
+                <div className="p-3.5 bg-stone-50 dark:bg-stone-800/60 rounded-lg border border-stone-200 dark:border-stone-700/60 text-xs text-stone-600 dark:text-stone-300 font-bangla space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <span className="font-semibold text-stone-800 dark:text-stone-200">লগইনকৃত অ্যাডমিন অ্যাকাউন্ট: </span>
+                      <span className="font-sans font-medium text-emerald-800 dark:text-emerald-400">{adminEmail || 'মাদ্রাসার অনুমোদিত অ্যাডমিন'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSendResetEmail}
+                      disabled={isSendingResetEmail}
+                      className="px-3 py-1 bg-white dark:bg-stone-700 hover:bg-stone-100 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600 rounded text-[11px] font-bangla transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {isSendingResetEmail ? 'পাঠানো হচ্ছে...' : '📧 পাসওয়ার্ড রিসেট ইমেইল পাঠান'}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                    নিচের ফর্ম ব্যবহার করে আপনি সরাসরি ফায়ারবেস অথেন্টিকেশনের পাসওয়ার্ড পরিবর্তন করতে পারেন অথবা উপরের বাটনে ক্লিক করে রেজিস্টার্ড ইমেইলে অফিসিয়াল পাসওয়ার্ড রিসেট লিংক পাঠাতে পারেন।
                   </p>
                 </div>
 
@@ -911,7 +1352,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                       type="password"
                       value={oldPassword}
                       onChange={(e) => setOldPassword(e.target.value)}
-                      placeholder={hasCustomPassword ? 'আপনার বর্তমান পাসওয়ার্ডটি লিখুন' : 'বর্তমান পাসওয়ার্ড দিন (ডিফল্ট: admin1234)'}
+                      placeholder="আপনার বর্তমান Firebase পাসওয়ার্ডটি লিখুন"
                       className="w-full px-3 py-2 text-sm bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B] font-sans"
                       required
                     />
@@ -926,7 +1367,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="নতুন পাসওয়ার্ড (কমপক্ষে ৪ অক্ষর)"
+                        placeholder="নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)"
                         className="w-full px-3 py-2 text-sm bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B] font-sans"
                         required
                       />
@@ -940,7 +1381,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="পাসওয়ার্ড পুনরায় লিখুন"
+                        placeholder="নতুন পাসওয়ার্ড পুনরায় লিখুন"
                         className="w-full px-3 py-2 text-sm bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B] font-sans"
                         required
                       />
@@ -950,10 +1391,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="px-5 py-2.5 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 font-bangla shadow-xs cursor-pointer"
+                      disabled={isChangingPass}
+                      className="px-5 py-2.5 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 font-bangla shadow-xs cursor-pointer disabled:opacity-50"
                     >
                       <Check className="w-4 h-4 text-amber-300" />
-                      <span>পাসওয়ার্ড আপডেট ও ওভাররাইট করুন</span>
+                      <span>{isChangingPass ? 'আপডেট হচ্ছে...' : 'Firebase পাসওয়ার্ড আপডেট করুন'}</span>
                     </button>
                   </div>
                 </form>
@@ -967,7 +1409,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                   </div>
                   <div>
                     <h4 className="text-base font-bold text-stone-900 dark:text-stone-100 font-bangla">
-                      ডেমো ডেটা ও পাসওয়ার্ড রিসেট
+                      ডেমো ডেটা রিসেট
                     </h4>
                     <p className="text-xs text-stone-500 dark:text-stone-400 font-bangla">
                       সকল নোটিশ, ফলাফল ও ভর্তি আবেদন মাদ্রাসার প্রাথমিক ডেমো অবস্থায় ফিরিয়ে আনুন।
@@ -976,15 +1418,15 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                 </div>
 
                 <p className="text-xs text-stone-600 dark:text-stone-300 font-bangla">
-                  আপনি যদি পরীক্ষামূলক তথ্য মুছে ফেলে মাদ্রাসার আদি কনফিগারেশন রিস্টোর করতে চান, তবে নিচের বাটনটি ব্যবহার করতে পারেন। এতে কাস্টম পাসওয়ার্ড মুছে গিয়ে পুনরায় ডিফল্ট পাসওয়ার্ড <code className="bg-stone-200 dark:bg-stone-800 px-1 py-0.5 rounded font-sans font-bold text-stone-800 dark:text-amber-300 border border-stone-300 dark:border-stone-700">admin1234</code> সেট হবে।
+                  আপনি যদি পরীক্ষামূলক তথ্য মুছে ফেলে মাদ্রাসার আদি ডেমো ডেটা রিস্টোর করতে চান, তবে নিচের বাটনটি ব্যবহার করতে পারেন। এতে নোটিশ, ফলাফল ও ভর্তি আবেদনগুলো প্রাথমিক অবস্থায় ফিরে যাবে (আপনার Google Firebase Authentication সুরক্ষিত থাকবে)।
                 </p>
 
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm('আপনি কি নিশ্চিত যে সকল তথ্য ও পাসওয়ার্ড রিসেট করে প্রাথমিক ডেমো অবস্থায় নিতে চান?')) {
+                    if (confirm('আপনি কি নিশ্চিত যে সকল ডেমো তথ্য রিসেট করে প্রাথমিক অবস্থায় নিতে চান?')) {
                       resetAllData();
-                      setPasswordMsg({ text: 'সকল তথ্য ও পাসওয়ার্ড সফলভাবে প্রাথমিক অবস্থায় রিসেট হয়েছে!', isError: false });
+                      setPasswordMsg({ text: 'সকল ডেমো তথ্য সফলভাবে প্রাথমিক অবস্থায় রিসেট হয়েছে!', isError: false });
                       showToast('সকল ডেটা সফলভাবে প্রাথমিক অবস্থায় রিসেট করা হয়েছে!');
                     }
                   }}
@@ -1489,6 +1931,321 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                   >
                     <Check className="w-4 h-4 text-amber-300" />
                     <span>ফলাফল সংরক্ষণ করুন</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 4: ADMIT CARD PREVIEW & PRINT (WITH QR CODE) */}
+        {selectedAdmitForView && (
+          <AdmitCardView
+            card={selectedAdmitForView}
+            isModal
+            onClose={() => setSelectedAdmitForView(null)}
+          />
+        )}
+
+        {/* MODAL 5: ADMIT CARD FORM (CREATE / EDIT) */}
+        {isAdmitFormOpen && (
+          <div
+            className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in"
+            onClick={() => setIsAdmitFormOpen(false)}
+          >
+            <div
+              className="bg-white dark:bg-stone-900 rounded-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl border border-stone-200 dark:border-stone-800 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-[#064E3B] dark:text-emerald-400" />
+                  <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-bangla">
+                    {editingAdmitCard ? `রোল ${editingAdmitCard.roll}-এর প্রবেশপত্র এডিট করুন` : 'নতুন পরীক্ষার প্রবেশপত্র ইস্যু করুন'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setIsAdmitFormOpen(false)}
+                  className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-md"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveAdmitCard} className="space-y-4 font-bangla text-xs">
+                {/* Policy reminder */}
+                <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    <strong>নীতিমালা:</strong> ছাত্রীরা সবাই সম্পূর্ণ অনাবাসিক; শুধুমাত্র হিফজুল কুরআন বিভাগে ছাত্রদের আবাসিক ব্যবস্থা প্রযোজ্য।
+                  </span>
+                </div>
+
+                {/* Candidate Info Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-stone-50 dark:bg-stone-800/60 p-4 rounded-xl border border-stone-200 dark:border-stone-700">
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      রোল নম্বর <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.roll}
+                      onChange={(e) => {
+                        const newRoll = e.target.value;
+                        setAdmitFormData({
+                          ...admitFormData,
+                          roll: newRoll,
+                          registrationNo: admitFormData.registrationNo || `TQWM-2026-0${newRoll}`
+                        });
+                      }}
+                      placeholder="যেমন: 105"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B] font-mono"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      রেজিস্ট্রেশন নম্বর <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.registrationNo}
+                      onChange={(e) => setAdmitFormData({ ...admitFormData, registrationNo: e.target.value })}
+                      placeholder="TQWM-2026-0105"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B] font-mono"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      শিক্ষার্থীর নাম (বাংলায়) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.studentName}
+                      onChange={(e) => setAdmitFormData({ ...admitFormData, studentName: e.target.value })}
+                      placeholder="যেমন: হাবিবা খাতুন"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      শিক্ষার্থীর নাম (ইংরেজিতে)
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.studentNameEn || ''}
+                      onChange={(e) => setAdmitFormData({ ...admitFormData, studentNameEn: e.target.value })}
+                      placeholder="Habiba Khatun"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B] font-sans"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      পিতার নাম <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.fatherName}
+                      onChange={(e) => setAdmitFormData({ ...admitFormData, fatherName: e.target.value })}
+                      placeholder="যেমন: মুহাম্মদ ফারুক আহমেদ"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      মাতার নাম
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.motherName || ''}
+                      onChange={(e) => setAdmitFormData({ ...admitFormData, motherName: e.target.value })}
+                      placeholder="যেমন: রোকেয়া বেগম"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      শিক্ষা বিভাগ <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={admitFormData.department}
+                      onChange={(e) => {
+                        const dept = e.target.value;
+                        const isHifz = dept.includes('হিফজ');
+                        setAdmitFormData({
+                          ...admitFormData,
+                          department: dept,
+                          residentType: isHifz ? 'residential' : 'non_residential'
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                    >
+                      <option value="হিফজুল কুরআন বিভাগ">হিফজুল কুরআন বিভাগ (আবাসিক)</option>
+                      <option value="নাজেরা বিভাগ">নাজেরা বিভাগ (অনাবাসিক)</option>
+                      <option value="কিতাব বিভাগ (দাওরায়ে হাদীস)">কিতাব বিভাগ (অনাবাসিক)</option>
+                      <option value="মক্তব ও নূরানী বিভাগ">মক্তব ও নূরানী বিভাগ (অনাবাসিক)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      আবাসিক ব্যবস্থা (স্বয়ংক্রিয় নির্ধারিত)
+                    </label>
+                    <div className="px-3 py-2 bg-stone-100 dark:bg-stone-700/60 border border-stone-300 dark:border-stone-600 rounded-lg font-bold text-stone-800 dark:text-stone-200">
+                      {admitFormData.department.includes('হিফজ')
+                        ? '🏡 আবাসিক (শুধুমাত্র হেফজখানার ছাত্রদের জন্য)'
+                        : '🎒 অনাবাসিক (ছাত্রীদের সকল বিভাগ সম্পূর্ণ অনাবাসিক)'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      পরীক্ষার নাম
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.examName}
+                      onChange={(e) => setAdmitFormData({ ...admitFormData, examName: e.target.value })}
+                      placeholder="বার্ষিক মূল্যায়ন পরীক্ষা ২০২৬"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      শিক্ষাবর্ষ / সেশন
+                    </label>
+                    <input
+                      type="text"
+                      value={admitFormData.session}
+                      onChange={(e) => setAdmitFormData({ ...admitFormData, session: e.target.value })}
+                      placeholder="২০২৫-২০২৬"
+                      className="w-full px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#064E3B] font-sans"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Exam Schedule Table */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-[#064E3B] dark:text-emerald-400" />
+                      <span>পরীক্ষার সময়সূচী ও বিষয় তালিকা (Exam Routine):</span>
+                    </h5>
+                    <button
+                      type="button"
+                      onClick={addAdmitScheduleRow}
+                      className="px-2.5 py-1 text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-[#064E3B] dark:text-emerald-300 hover:bg-emerald-200 rounded transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>বিষয় যোগ করুন</span>
+                    </button>
+                  </div>
+
+                  <div className="border border-stone-200 dark:border-stone-700 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-b border-stone-200 dark:border-stone-700">
+                        <tr>
+                          <th className="p-2">তারিখ</th>
+                          <th className="p-2">বার</th>
+                          <th className="p-2">বিষয়ের নাম</th>
+                          <th className="p-2">সময়</th>
+                          <th className="p-2">কক্ষ/হল</th>
+                          <th className="p-2 w-8"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
+                        {admitFormData.schedule.map((item, idx) => (
+                          <tr key={idx} className="bg-white dark:bg-stone-800">
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={item.date}
+                                onChange={(e) => handleAdmitScheduleChange(idx, 'date', e.target.value)}
+                                className="w-full px-2 py-1 text-xs border border-stone-300 dark:border-stone-600 rounded bg-white dark:bg-stone-700"
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={item.day}
+                                onChange={(e) => handleAdmitScheduleChange(idx, 'day', e.target.value)}
+                                className="w-20 px-2 py-1 text-xs border border-stone-300 dark:border-stone-600 rounded bg-white dark:bg-stone-700"
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={item.subject}
+                                onChange={(e) => handleAdmitScheduleChange(idx, 'subject', e.target.value)}
+                                className="w-full px-2 py-1 text-xs border border-stone-300 dark:border-stone-600 rounded bg-white dark:bg-stone-700"
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={item.time}
+                                onChange={(e) => handleAdmitScheduleChange(idx, 'time', e.target.value)}
+                                className="w-28 px-2 py-1 text-xs border border-stone-300 dark:border-stone-600 rounded bg-white dark:bg-stone-700"
+                                required
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={item.roomNo}
+                                onChange={(e) => handleAdmitScheduleChange(idx, 'roomNo', e.target.value)}
+                                className="w-20 px-2 py-1 text-xs border border-stone-300 dark:border-stone-600 rounded bg-white dark:bg-stone-700"
+                                required
+                              />
+                            </td>
+                            <td className="p-2 text-center">
+                              {admitFormData.schedule.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeAdmitScheduleRow(idx)}
+                                  className="text-stone-400 hover:text-red-600 p-1 cursor-pointer"
+                                  title="মুছে ফেলুন"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="pt-3 flex items-center justify-end gap-2 border-t border-stone-200 dark:border-stone-800">
+                  <button
+                    type="button"
+                    onClick={() => setIsAdmitFormOpen(false)}
+                    className="px-4 py-2 border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg text-xs font-medium cursor-pointer"
+                  >
+                    বাতিল
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs cursor-pointer"
+                  >
+                    <Check className="w-4 h-4 text-amber-300" />
+                    <span>প্রবেশপত্র সংরক্ষণ ও QR প্রস্তুত করুন</span>
                   </button>
                 </div>
               </form>

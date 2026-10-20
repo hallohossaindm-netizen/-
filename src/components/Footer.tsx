@@ -72,7 +72,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDonation, onOpenAdmin }) =
                 <a href="#academics" className="hover:text-amber-300 transition-colors">মক্তব ও নূরানী বিভাগ</a>
               </li>
               <li>
-                <a href="#academics" className="hover:text-amber-300 transition-colors">দৈনিক হোস্টেল ও ক্লাস রুটিন</a>
+                <a href="#academics" className="hover:text-amber-300 transition-colors">দৈনিক ক্লাস ও প্রাতিষ্ঠানিক রুটিন</a>
               </li>
             </ul>
           </div>

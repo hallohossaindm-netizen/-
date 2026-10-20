@@ -82,13 +82,32 @@ export const Gallery: React.FC = () => {
               className="group bg-white dark:bg-stone-900 rounded-lg border border-stone-200 dark:border-stone-800 overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col"
             >
               <div className="relative aspect-[4/3] bg-stone-100 dark:bg-stone-800 overflow-hidden">
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-stone-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <picture>
+                  {item.srcSet && (
+                    <source
+                      type="image/webp"
+                      srcSet={item.srcSet}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
+                    />
+                  )}
+                  <img
+                    src={item.webpUrl || item.imageUrl}
+                    alt={item.title}
+                    width={item.width || 600}
+                    height={item.height || 450}
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (item.imageUrl && target.src !== item.imageUrl) {
+                        target.src = item.imageUrl;
+                      }
+                    }}
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+                  />
+                </picture>
+                <div className="absolute inset-0 bg-stone-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                   <div className="w-10 h-10 rounded-full bg-white/90 text-stone-900 flex items-center justify-center shadow-md">
                     <ZoomIn className="w-5 h-5 text-[#064E3B]" />
                   </div>
@@ -125,13 +144,32 @@ export const Gallery: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
 
-            <div className="max-h-[70vh] flex items-center justify-center bg-black">
-              <img
-                src={activeItem.imageUrl}
-                alt={activeItem.title}
-                referrerPolicy="no-referrer"
-                className="max-h-[70vh] w-auto max-w-full object-contain"
-              />
+            <div className="max-h-[70vh] flex items-center justify-center bg-black p-2 sm:p-4">
+              <picture className="flex items-center justify-center w-full h-full">
+                {activeItem.srcSet && (
+                  <source
+                    type="image/webp"
+                    srcSet={activeItem.srcSet}
+                    sizes="(max-width: 1024px) 95vw, 896px"
+                  />
+                )}
+                <img
+                  src={activeItem.webpUrl || activeItem.imageUrl}
+                  alt={activeItem.title}
+                  width={activeItem.width || 1200}
+                  height={activeItem.height || 896}
+                  loading="eager"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (activeItem.imageUrl && target.src !== activeItem.imageUrl) {
+                      target.src = activeItem.imageUrl;
+                    }
+                  }}
+                  className="max-h-[65vh] w-auto max-w-full object-contain rounded"
+                />
+              </picture>
             </div>
 
             <div className="p-5 bg-stone-900 text-white font-bangla">

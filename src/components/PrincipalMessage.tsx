@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Quote, Award, ShieldCheck, HeartHandshake, Phone, MapPin, User, ChevronDown, ChevronUp, BookOpen, Sparkles } from 'lucide-react';
 import { MADRASAH_INFO } from '../data/madrasahData';
+import { PRINCIPAL_IMAGE } from '../assets/images';
 
 export const PrincipalMessage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'director' | 'founder' | 'academic'>('director');
@@ -71,14 +72,31 @@ export const PrincipalMessage: React.FC = () => {
               {/* Photo & Identity Column */}
               <div className="lg:col-span-4 bg-stone-50 dark:bg-stone-950/60 p-6 lg:p-8 flex flex-col items-center text-center justify-between border-b lg:border-b-0 lg:border-r border-stone-200 dark:border-stone-800">
                 <div className="space-y-4 w-full">
-                  <div className="relative mx-auto w-44 h-44 sm:w-52 sm:h-52 rounded-xl overflow-hidden border-2 border-emerald-700/30 shadow-md bg-stone-200">
-                    <img
-                      src="/src/assets/images/madrasah_principal_1791811356816.jpg"
-                      alt={MADRASAH_INFO.currentDirector.name}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-stone-900/80 to-transparent p-2 text-white text-[11px] font-bangla">
+                  <div className="relative mx-auto w-44 h-44 sm:w-52 sm:h-52 rounded-xl overflow-hidden border-2 border-emerald-700/30 shadow-md bg-stone-200 aspect-square">
+                    <picture>
+                      <source
+                        type="image/webp"
+                        srcSet={PRINCIPAL_IMAGE.srcSet}
+                        sizes="(max-width: 640px) 176px, 208px"
+                      />
+                      <img
+                        src={PRINCIPAL_IMAGE.webpSrc}
+                        alt={MADRASAH_INFO.currentDirector.name}
+                        width={PRINCIPAL_IMAGE.width}
+                        height={PRINCIPAL_IMAGE.height}
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src !== PRINCIPAL_IMAGE.fallbackJpg) {
+                            target.src = PRINCIPAL_IMAGE.fallbackJpg;
+                          }
+                        }}
+                        className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500 ease-out"
+                      />
+                    </picture>
+                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-stone-900/80 via-stone-900/40 to-transparent p-2 text-white text-[11px] font-bangla pointer-events-none">
                       বর্তমান পরিচালক
                     </div>
                   </div>
@@ -100,7 +118,7 @@ export const PrincipalMessage: React.FC = () => {
                 <div className="w-full mt-6 pt-6 border-t border-stone-200 dark:border-stone-800 space-y-2.5 text-left text-xs text-stone-700 dark:text-stone-300 font-bangla">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
-                    <span>শতভাগ শরয়ী পর্দার নিশ্ছিদ্র নিরাপত্তা</span>
+                    <span>অভিজ্ঞ শিক্ষক-শিক্ষিকা দ্বারা মানসম্মত পাঠদান</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Award className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
@@ -108,7 +126,7 @@ export const PrincipalMessage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <HeartHandshake className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
-                    <span>মমতাময়ী মাতৃতুল্য আবাসিক তত্ত্বাবধান</span>
+                    <span>স্নেহময় পরিবেশে নিবিড় ও সুশৃঙ্খল তত্ত্বাবধান</span>
                   </div>
                   <div className="flex items-center gap-2 pt-2 border-t border-stone-200 dark:border-stone-800">
                     <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -139,7 +157,7 @@ export const PrincipalMessage: React.FC = () => {
                     {isDirectorExpanded && (
                       <div className="space-y-4 pt-1 animate-in fade-in duration-200">
                         <p>
-                          আমাদের মাদ্রাসায় নাজেরা, আন্তর্জাতিক মানের হিফজুল কুরআন এবং কিতাব বিভাগে বেফাক বোর্ডের মানসম্মত সিলেবাস পূর্ণ নিষ্ঠার সাথে পাঠদান করা হয়। নারী শিক্ষার্থীদের শারীরিক ও আত্মিক সুরক্ষায় মহিলা শিক্ষক ও অভিজ্ঞ হাফেযাদের দ্বারা নিবিড় তত্ত্বাবধান নিশ্চিত করা হয়।
+                          আমাদের মাদ্রাসায় নাজেরা, আন্তর্জাতিক মানের হিফজুল কুরআন এবং কিতাব বিভাগে বেফাক বোর্ডের মানসম্মত সিলেবাস পূর্ণ নিষ্ঠার সাথে পাঠদান করা হয়। অভিজ্ঞ শিক্ষক-শিক্ষিকাদের দ্বারা নিবিড় তত্ত্বাবধান ও মানসম্মত পাঠদান নিশ্চিত করা হয়।
                         </p>
                         <p>
                           আমরা ফতেয়াবাদ, পাহাড়তলীসহ চট্টগ্রামের সর্বস্তরের মুসলিম ভাই-বোন ও অভিভাবকদের প্রতি উদাত্ত আহ্বান জানাই—আপনার আদরের কন্যাদের দ্বীনি শিক্ষায় শিক্ষিত করতে আমাদের সাথে থাকুন এবং প্রতিষ্ঠাতা সাহেবের সূচিত এই বরকতময় খেদমতকে সার্বিক দোয়া ও সহযোগিতায় ধন্য করুন।
@@ -322,10 +340,10 @@ export const PrincipalMessage: React.FC = () => {
                 <div className="p-5 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/60 space-y-2">
                   <h5 className="font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-                    <span>মহিলা শিক্ষিকাবৃন্দের দিকনির্দেশনা</span>
+                    <span>অভিজ্ঞ শিক্ষক-শিক্ষিকাবৃন্দের দিকনির্দেশনা</span>
                   </h5>
                   <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-                    অভিজ্ঞ মুহাদ্দিসা ও আন্তর্জাতিক মানের হাফেযাদের নিয়ে গঠিত শিক্ষকমণ্ডলীকে সরাসরি নিবিড় পরামর্শ ও তত্ত্বাবধান প্রদান করেন শিক্ষা পরিচালক মহোদয়।
+                    অভিজ্ঞ শিক্ষক-শিক্ষিকা ও আন্তর্জাতিক মানের হাফেজ-হাফেযাদের নিয়ে গঠিত শিক্ষকমণ্ডলীকে সরাসরি নিবিড় পরামর্শ ও তত্ত্বাবধান প্রদান করেন শিক্ষা পরিচালক মহোদয়।
                   </p>
                 </div>
               </div>

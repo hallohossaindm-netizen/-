@@ -5,7 +5,7 @@ import { AdmissionFormData, DepartmentId } from '../types';
 import { useMadrasah } from '../context/MadrasahContext';
 
 export const AdmissionSection: React.FC = () => {
-  const { submitApplication } = useMadrasah();
+  const { submitApplication, isAdmissionOpen } = useMadrasah();
   const [formData, setFormData] = useState<AdmissionFormData>({
     studentName: '',
     studentNameEn: '',
@@ -106,14 +106,26 @@ export const AdmissionSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         {/* Section Header */}
         <div className="max-w-2xl mx-auto text-center mb-12">
-          <div className="text-xs uppercase tracking-widest text-[#064E3B] dark:text-emerald-400 font-semibold">
-            নতুন শিক্ষাবর্ষে ভর্তি
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs uppercase tracking-wider font-semibold">
+            {isAdmissionOpen ? (
+              <span className="bg-emerald-100 text-[#064E3B] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                নতুন শিক্ষাবর্ষে ভর্তি চলছে
+              </span>
+            ) : (
+              <span className="bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                ভর্তি আবেদন গ্রহণ বর্তমানে বন্ধ আছে
+              </span>
+            )}
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-bangla text-stone-900 dark:text-stone-100 mt-2">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-bangla text-stone-900 dark:text-stone-100 mt-3">
             অনলাইন ভর্তি ও নির্দেশিকা
           </h2>
           <p className="text-stone-600 dark:text-stone-300 text-sm font-bangla mt-3">
-            সহজেই ঘরে বসে আপনার কন্যার প্রাথমিক ভর্তি ফরম পূরণ করুন এবং ডিজিটাল আবেদন স্লিপ সংগ্রহ করুন।
+            {isAdmissionOpen
+              ? 'সহজেই ঘরে বসে আপনার কন্যার প্রাথমিক ভর্তি ফরম পূরণ করুন এবং ডিজিটাল আবেদন স্লিপ সংগ্রহ করুন।'
+              : 'চলতি সেশনের অনলাইন ভর্তি আবেদন কার্যক্রম সাময়িকভাবে বন্ধ রয়েছে। বিস্তারিত জানতে নিচে দেখুন।'}
           </p>
           <div className="w-16 h-0.5 bg-amber-500 mx-auto mt-4" />
         </div>
@@ -138,160 +150,218 @@ export const AdmissionSection: React.FC = () => {
           ))}
         </div>
 
-        {/* Clean Online Admission Form */}
-        <div className="bg-white dark:bg-stone-900 rounded-lg border border-stone-200 dark:border-stone-800 shadow-sm overflow-hidden">
-          <div className="bg-[#064E3B] text-white px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-emerald-900">
-            <div>
-              <h3 className="text-lg font-bold font-bangla">
-                অনলাইন ভর্তি আবেদন ফরম (Online Admission Form)
+        {/* Clean Online Admission Form / Closed Notice */}
+        {!isAdmissionOpen ? (
+          <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8 sm:p-12 text-center shadow-sm space-y-6">
+            <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+              <Calendar className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="max-w-xl mx-auto space-y-3">
+              <span className="inline-block px-3.5 py-1 bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800 text-xs font-bold rounded-full font-bangla">
+                বর্তমানে ভর্তি কার্যক্রম বন্ধ আছে
+              </span>
+              <h3 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-bangla">
+                চলতি সেশনের অনলাইন ভর্তি আবেদন গ্রহণ সাময়িকভাবে স্থগিত
               </h3>
-              <p className="text-xs text-emerald-200 font-bangla">
-                সকল তথ্য যথাযথভাবে বাংলায় অথবা ইংরেজিতে পূরণ করুন
+              <p className="text-stone-600 dark:text-stone-300 text-sm font-bangla leading-relaxed">
+                সম্মানিত অভিভাবকবৃন্দ, চলতি শিক্ষাবর্ষের সকল নির্ধারিত আসন পূর্ণ হওয়ায় বা সময়সীমা সমাপ্ত হওয়ায় অনলাইন ভর্তি ফরম পূরণ সাময়িকভাবে বন্ধ রাখা হয়েছে। পরবর্তী সেশনের ভর্তি শুরুর তারিখ ও সময়সূচি আমাদের অফিসিয়াল নোটিশ বোর্ডে জানিয়ে দেওয়া হবে।
               </p>
             </div>
-            <div className="text-xs bg-emerald-900/60 text-amber-300 px-3 py-1 rounded font-bangla">
-              সেশন: ১৪৪৭-৪৮ হিজরী / ২০২৬-২৭
+
+            <div className="max-w-md mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs font-bangla">
+              <div className="p-3.5 bg-stone-50 dark:bg-stone-800/80 rounded-xl border border-stone-200 dark:border-stone-700">
+                <span className="text-stone-500 dark:text-stone-400 block font-medium">জরুরি ভর্তি হেল্পলাইন:</span>
+                <a href={`tel:${MADRASAH_INFO.phonePrimary}`} className="font-bold text-[#064E3B] dark:text-emerald-400 text-sm mt-0.5 block hover:underline">
+                  {MADRASAH_INFO.phonePrimary}
+                </a>
+              </div>
+              <div className="p-3.5 bg-stone-50 dark:bg-stone-800/80 rounded-xl border border-stone-200 dark:border-stone-700">
+                <span className="text-stone-500 dark:text-stone-400 block font-medium">অফিস সময়সূচী:</span>
+                <span className="font-semibold text-stone-800 dark:text-stone-200 block mt-0.5">
+                  সকাল ৮:৩০ - দুপুর ১:০০
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <a
+                href="#notices"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg text-xs font-semibold transition-colors shadow-xs font-bangla"
+              >
+                <FileText className="w-4 h-4 text-amber-300" />
+                <span>মাদ্রাসার সাম্প্রতিক নোটিশ দেখুন</span>
+              </a>
             </div>
           </div>
+        ) : (
+          <div className="bg-white dark:bg-stone-900 rounded-lg border border-stone-200 dark:border-stone-800 shadow-sm overflow-hidden">
+            <div className="bg-[#064E3B] text-white px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-emerald-900">
+              <div>
+                <h3 className="text-lg font-bold font-bangla">
+                  অনলাইন ভর্তি আবেদন ফরম (Online Admission Form)
+                </h3>
+                <p className="text-xs text-emerald-200 font-bangla">
+                  সকল তথ্য যথাযথভাবে বাংলায় অথবা ইংরেজিতে পূরণ করুন
+                </p>
+              </div>
+              <div className="text-xs bg-emerald-900/60 text-amber-300 px-3 py-1 rounded font-bangla">
+                সেশন: ১৪৪৭-৪৮ হিজরী / ২০২৬-২৭
+              </div>
+            </div>
 
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 lg:p-10 space-y-8 font-bangla">
-            {/* Section 1: Student Information */}
-            <div>
-              <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider pb-2 border-b border-stone-200 dark:border-stone-800 mb-4 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#064E3B] dark:text-emerald-400" />
-                <span>১. শিক্ষার্থীর ব্যক্তিগত বিবরণ</span>
-              </h4>
+            <form onSubmit={handleSubmit} className="p-6 sm:p-8 lg:p-10 space-y-8 font-bangla">
+              {/* Section 1: Student Information */}
+              <div>
+                <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider pb-2 border-b border-stone-200 dark:border-stone-800 mb-4 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#064E3B] dark:text-emerald-400" />
+                  <span>১. শিক্ষার্থীর ব্যক্তিগত বিবরণ</span>
+                </h4>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                    শিক্ষার্থীর পূর্ণ নাম (বাংলায়) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.studentName}
-                    onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                    placeholder="উদা: খাদিজা তাসনিম"
-                    className={`w-full px-3.5 py-2 text-sm rounded border ${
-                      errors.studentName
-                        ? 'border-red-400 bg-red-50/20 dark:bg-red-950/20'
-                        : 'border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500'
-                    } focus:outline-none focus:ring-2 focus:ring-[#064E3B]`}
-                  />
-                  {errors.studentName && (
-                    <p className="text-red-600 dark:text-red-400 text-[11px] mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {errors.studentName}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                    শিক্ষার্থীর নাম (ইংরেজিতে - বড় অক্ষরে)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.studentNameEn}
-                    onChange={(e) => setFormData({ ...formData, studentNameEn: e.target.value })}
-                    placeholder="KHADIJA TASNIM"
-                    className="w-full px-3.5 py-2 text-sm rounded border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                    জন্ম তারিখ <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className={`w-full px-3.5 py-2 text-sm rounded border ${
-                      errors.dateOfBirth
-                        ? 'border-red-400 bg-red-50/20 dark:bg-red-950/20'
-                        : 'border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100'
-                    } focus:outline-none focus:ring-2 focus:ring-[#064E3B]`}
-                  />
-                  {errors.dateOfBirth && (
-                    <p className="text-red-600 dark:text-red-400 text-[11px] mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {errors.dateOfBirth}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                    রক্তের গ্রুপ (Blood Group)
-                  </label>
-                  <select
-                    value={formData.bloodGroup}
-                    onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                    className="w-full px-3.5 py-2 text-sm rounded border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
-                  >
-                    <option value="A+">A+ (পজিটিভ)</option>
-                    <option value="A-">A- (নেগেটিভ)</option>
-                    <option value="B+">B+ (পজিটিভ)</option>
-                    <option value="B-">B- (নেগেটিভ)</option>
-                    <option value="O+">O+ (পজিটিভ)</option>
-                    <option value="O-">O- (নেগেটিভ)</option>
-                    <option value="AB+">AB+ (পজিটিভ)</option>
-                    <option value="AB-">AB- (নেগেটিভ)</option>
-                    <option value="অজানা">জানা নেই</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                    কাঙ্ক্ষিত শিক্ষা বিভাগ <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.departmentChoice}
-                    onChange={(e) => setFormData({ ...formData, departmentChoice: e.target.value as DepartmentId })}
-                    className={`w-full px-3.5 py-2 text-sm rounded border ${
-                      errors.departmentChoice ? 'border-red-400' : 'border-stone-300 dark:border-stone-700'
-                    } bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#064E3B]`}
-                  >
-                    <option value="nazera">নাজেরা বিভাগ (তাজবীদ ও সহীহ তিলাওয়াত)</option>
-                    <option value="hifz">হিফজুল কুরআন বিভাগ (পূর্ণাঙ্গ হিফজ)</option>
-                    <option value="kitab">কিতাব বিভাগ (মিজান থেকে দাওরায়ে হাদীস)</option>
-                    <option value="noorani">মক্তব ও নূরানী বিভাগ (প্রাথমিক বুনিয়াদ)</option>
-                  </select>
-                  {errors.departmentChoice && (
-                    <p className="text-red-600 text-[11px] mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {errors.departmentChoice}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
-                    আবাসিক নাকি অনাবাসিক? <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-4 pt-1.5">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-stone-800 dark:text-stone-200">
-                      <input
-                        type="radio"
-                        name="residentType"
-                        checked={formData.residentType === 'residential'}
-                        onChange={() => setFormData({ ...formData, residentType: 'residential' })}
-                        className="text-[#064E3B] focus:ring-[#064E3B]"
-                      />
-                      <span>আবাসিক (হোস্টেল)</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                      শিক্ষার্থীর পূর্ণ নাম (বাংলায়) <span className="text-red-500">*</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer text-sm text-stone-800 dark:text-stone-200">
-                      <input
-                        type="radio"
-                        name="residentType"
-                        checked={formData.residentType === 'non_residential'}
-                        onChange={() => setFormData({ ...formData, residentType: 'non_residential' })}
-                        className="text-[#064E3B] focus:ring-[#064E3B]"
-                      />
-                      <span>অনাবাসিক (ডে-কেয়ার)</span>
+                    <input
+                      type="text"
+                      value={formData.studentName}
+                      onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
+                      placeholder="উদা: খাদিজা তাসনিম"
+                      className={`w-full px-3.5 py-2 text-sm rounded border ${
+                        errors.studentName
+                          ? 'border-red-400 bg-red-50/20 dark:bg-red-950/20'
+                          : 'border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500'
+                      } focus:outline-none focus:ring-2 focus:ring-[#064E3B]`}
+                    />
+                    {errors.studentName && (
+                      <p className="text-red-600 dark:text-red-400 text-[11px] mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {errors.studentName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                      শিক্ষার্থীর নাম (ইংরেজিতে - বড় অক্ষরে)
                     </label>
+                    <input
+                      type="text"
+                      value={formData.studentNameEn}
+                      onChange={(e) => setFormData({ ...formData, studentNameEn: e.target.value })}
+                      placeholder="KHADIJA TASNIM"
+                      className="w-full px-3.5 py-2 text-sm rounded border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                      জন্ম তারিখ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                      className={`w-full px-3.5 py-2 text-sm rounded border ${
+                        errors.dateOfBirth
+                          ? 'border-red-400 bg-red-50/20 dark:bg-red-950/20'
+                          : 'border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100'
+                      } focus:outline-none focus:ring-2 focus:ring-[#064E3B]`}
+                    />
+                    {errors.dateOfBirth && (
+                      <p className="text-red-600 dark:text-red-400 text-[11px] mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {errors.dateOfBirth}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                      রক্তের গ্রুপ (Blood Group)
+                    </label>
+                    <select
+                      value={formData.bloodGroup}
+                      onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                      className="w-full px-3.5 py-2 text-sm rounded border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                    >
+                      <option value="A+">A+ (পজিটিভ)</option>
+                      <option value="A-">A- (নেগেটিভ)</option>
+                      <option value="B+">B+ (পজিটিভ)</option>
+                      <option value="B-">B- (নেগেটিভ)</option>
+                      <option value="O+">O+ (পজিটিভ)</option>
+                      <option value="O-">O- (নেগেটিভ)</option>
+                      <option value="AB+">AB+ (পজিটিভ)</option>
+                      <option value="AB-">AB- (নেগেটিভ)</option>
+                      <option value="অজানা">জানা নেই</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                      কাঙ্ক্ষিত শিক্ষা বিভাগ <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.departmentChoice}
+                      onChange={(e) => {
+                        const dept = e.target.value as DepartmentId;
+                        setFormData({
+                          ...formData,
+                          departmentChoice: dept,
+                          residentType: dept === 'hifz' ? 'residential' : 'non_residential',
+                        });
+                      }}
+                      className={`w-full px-3.5 py-2 text-sm rounded border ${
+                        errors.departmentChoice ? 'border-red-400' : 'border-stone-300 dark:border-stone-700'
+                      } bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#064E3B]`}
+                    >
+                      <option value="hifz">হিফজুল কুরআন বিভাগ (ছাত্রদের একমাত্র আবাসিক বিভাগ)</option>
+                      <option value="nazera">নাজেরা বিভাগ (অনাবাসিক)</option>
+                      <option value="kitab">কিতাব বিভাগ (মিজান থেকে দাওরায়ে হাদীস - অনাবাসিক)</option>
+                      <option value="noorani">মক্তব ও নূরানী বিভাগ (অনাবাসিক)</option>
+                    </select>
+                    {errors.departmentChoice && (
+                      <p className="text-red-600 text-[11px] mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {errors.departmentChoice}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                      আবাসিক নাকি অনাবাসিক ব্যবস্থা? <span className="text-red-500">*</span>
+                    </label>
+                    {formData.departmentChoice === 'hifz' ? (
+                      <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
+                          <span className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                            আবাসিক (হিফজুল কুরআন বিভাগে ছাত্রদের আবাসিক ব্যবস্থা)
+                          </span>
+                        </div>
+                        <span className="text-[10px] bg-emerald-200 dark:bg-emerald-900 text-emerald-950 dark:text-emerald-200 px-2 py-0.5 rounded font-semibold">
+                          হিফজ আবাসিক
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-lg bg-stone-100 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                          <span className="text-xs sm:text-sm font-bold text-stone-800 dark:text-stone-200">
+                            অনাবাসিক (ছাত্রীদের সকল বিভাগ সম্পূর্ণ অনাবাসিক)
+                          </span>
+                        </div>
+                        <span className="text-[10px] bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300 px-2 py-0.5 rounded font-semibold">
+                          ডে-কেয়ার
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
+                      {formData.departmentChoice === 'hifz'
+                        ? '💡 আমাদের মাদ্রাসার নিয়ম অনুযায়ী শুধুমাত্র হেফজখানার ছেলেদের জন্য আবাসিক ব্যবস্থা প্রযোজ্য। অন্যান্য সকল বিভাগ ও ছাত্রীদের জন্য সম্পূর্ণ অনাবাসিক।'
+                        : '💡 আমাদের প্রতিষ্ঠানে ছাত্রীরা সবাই সম্পূর্ণ অনাবাসিক (ডে-কেয়ার); শুধুমাত্র হেফজখানার ছেলেরা আবাসিক থাকে।'}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
 
             {/* Section 2: Parents & Guardian Information */}
             <div>
@@ -481,7 +551,7 @@ export const AdmissionSection: React.FC = () => {
                   className="mt-1 text-[#064E3B] rounded focus:ring-[#064E3B]"
                 />
                 <span className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
-                  আমি এই মর্মে অঙ্গীকার করছি যে, উপরে প্রদত্ত সকল তথ্য সম্পূর্ণ সত্য ও সঠিক। আমার কন্যা তালিমুল কুরআন মহিলা মাদ্রাসার শৃঙ্খলা, ইসলামী আদব ও হোস্টেল বিধিবিধান আন্তরিকতার সাথে মেনে চলবে।
+                  আমি এই মর্মে অঙ্গীকার করছি যে, উপরে প্রদত্ত সকল তথ্য সম্পূর্ণ সত্য ও সঠিক। আমার সন্তান/শিক্ষার্থী তালিমুল কুরআন মহিলা মাদ্রাসার শৃঙ্খলা, ইসলামী আদব ও প্রাতিষ্ঠানিক বিধিবিধান আন্তরিকতার সাথে মেনে চলবে।
                 </span>
               </label>
               {errors.agreement && (
@@ -514,6 +584,7 @@ export const AdmissionSection: React.FC = () => {
             </div>
           </form>
         </div>
+        )}
       </div>
 
       {/* Official Admission Slip Modal */}

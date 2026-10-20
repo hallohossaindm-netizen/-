@@ -8,24 +8,68 @@ interface ShareModalProps {
 
 export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
-  const liveUrl = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
-    ? window.location.origin
-    : 'https://ais-pre-lyhl47vmtsbynzthruoizk-829183906101.asia-east1.run.app';
+
+  // Guarantee that shared link is always the publicly accessible preview URL
+  // so that ANY smartphone can immediately open it without authorization restrictions
+  const liveUrl = (() => {
+    const fallback = 'https://ais-pre-lyhl47vmtsbynzthruoizk-829183906101.asia-east1.run.app';
+    if (typeof window === 'undefined' || !window.location.origin) return fallback;
+    const origin = window.location.origin;
+    if (origin.includes('ais-dev-')) {
+      return origin.replace('ais-dev-', 'ais-pre-');
+    }
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return fallback;
+    }
+    return origin;
+  })();
 
   if (!isOpen) return null;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(liveUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+  const handleCopy = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(liveUrl);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = liveUrl;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'তালিমুল কুরআন মহিলা মাদ্রাসা',
+          text: 'তালিমুল কুরআন মহিলা মাদ্রাসার অফিশিয়াল ওয়েবসাইট দেখুন ও অনলাইন ভর্তি ফরম পূরণ করুন:',
+          url: liveUrl,
+        });
+      } catch {
+        // user cancelled or share failed
+      }
+    } else {
+      handleWhatsApp();
+    }
   };
 
   const handleWhatsApp = () => {
-    const text = `তালিমুল কুরআন মহিলা মাদ্রাসার অফিশিয়াল ওয়েবসাইট দেখুন: ${liveUrl}`;
+    const text = `তালিমুল কুরআন মহিলা মাদ্রাসার অফিশিয়াল ওয়েবসাইট দেখুন ও অনলাইন ভর্তি আবেদন করুন: ${liveUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(liveUrl)}&margin=8`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(liveUrl)}&margin=8`;
 
   return (
     <div className="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-xs flex items-center justify-center p-4 font-bangla animate-in fade-in duration-200">
@@ -87,13 +131,21 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+          <button
+            onClick={handleNativeShare}
+            className="w-full py-2.5 px-3 bg-[#064E3B] hover:bg-[#043d2e] text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+          >
+            <Share2 className="w-4 h-4 text-amber-300" />
+            <span>মোবাইলে শেয়ার</span>
+          </button>
+
           <button
             onClick={handleWhatsApp}
             className="w-full py-2.5 px-3 bg-[#25D366] hover:bg-[#1ebd56] text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
           >
             <Share2 className="w-4 h-4" />
-            <span>হোয়াটসঅ্যাপে শেয়ার</span>
+            <span>হোয়াটসঅ্যাপে পাঠান</span>
           </button>
 
           <a
@@ -102,7 +154,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
             rel="noopener noreferrer"
             className="w-full py-2.5 px-3 bg-stone-800 hover:bg-stone-900 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
           >
-            <span>নতুন ট্যাবে খুলুন</span>
+            <span>সরাসরি খুলুন</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>

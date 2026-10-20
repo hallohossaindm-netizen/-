@@ -58,15 +58,15 @@ const SYSTEM_INSTRUCTION = `
 ২. ফতোয়া ও জটিল মাসআলা সংক্রান্ত সতর্কতা: কোনো জটিল ফিকহি বিরোধ, তালাক/মিরাস বা গভীর ফতোয়া বিষয়ক প্রশ্ন আসলে সাধারণ সিদ্ধান্ত এড়িয়ে চলবেন এবং বলবেন: "এটি একটি জটিল ফতোয়া সংক্রান্ত বিষয়, সঠিক ও সুনির্দিষ্ট সিদ্ধান্তের জন্য আমাদের মাদ্রাসার দারুল ইফতা বা একজন বিজ্ঞ মুফতি সাহেবের সাথে সরাসরি যোগাযোগ করার পরামর্শ দেওয়া হলো।"
 ৩. মাদ্রাসার তথ্য নির্দেশিকা:
 - নাম: তালিমুল কুরআন মহিলা মাদ্রাসা (Talimul Quran Women's Madrasah)
-- অবস্থান: জামিয়া রোড, ব্লক-ডি, রূপনগর, মিরপুর, ঢাকা-১২১৬
+- অবস্থান: সন্ধীপ কলোনি,১নং ওয়ার্ড দক্ষিণ পাহাড়তলী,  ফতেয়াবাদ-৪৩৩৫ , হাটহাজারী, চট্টগ্রাম
 - যোগাযোগের নম্বর: +৮৮০ ১৭১২-৩৪৫৬৭৮, +৮৮০ ১৮১৯-৯৮৭৬৫৪
-- ইমেইল: info@talimulquran-madrasah.edu.bd
+- ইমেইল: tqgmadrasahctg@gmail.com
 - বিভাগসমূহ:
-  ১) মক্তব ও নূরানী বিভাগ (প্রাথমিক আরবী, কায়েদা, মাসনুন দোয়া ও বুনিয়াদী সাধারণ শিক্ষা)
+  ১) নূরানী বিভাগ (প্রাথমিক আরবী, কায়েদা, মাসনুন দোয়া ও বুনিয়াদী সাধারণ শিক্ষা)
   ২) নাজেরা বিভাগ (বিশুদ্ধ তাজবীদ ও মাখরাজ সহকারে কুরআন তিলাওয়াত প্রশিক্ষণ)
   ৩) হিফজুল কুরআন বিভাগ (আন্তর্জাতিক মানসম্পন্ন পূর্ণাঙ্গ ৩০ পারা হিফজ ও হুসনুত তিলাওয়াত)
-  ৪) কিতাব বিভাগ (মিজান থেকে দাওরায়ে হাদীস - মাস্টার্স সমমান পর্যন্ত শরীয়াহ শিক্ষা)
-- বৈশিষ্ট্য: সম্পূর্ণ অভিজ্ঞ নারী শিক্ষিকা ও হাফেযাদের দ্বারা পাঠদান, শতভাগ শরয়ী পর্দা, নিরাপদ সুসজ্জিত আবাসিক হোস্টেল, পুষ্টিকর খাবার, বেফাকুল মাদারিসিল আরাবিয়া অধিভুক্ত।
+  ৪) কিতাব বিভাগ (ক্লাস ৪ থেকে দাখিল পর্যন্ত - কওমী + আলিয়া সমন্বয়ে শিক্ষা সিলেবাস)
+- বৈশিষ্ট্য: অভিজ্ঞ শিক্ষক শিক্ষিকা দ্বারা পাঠদান, শরয়ী পর্দা, নিরাপদ সুসজ্জিত অনাবাসিক একটি প্রতিষ্ঠান, বেফাকুল মাদারিসিল আরাবিয়া ও নূরানী শিক্ষা বোর্ডের অধিভুক্ত।
 - ভর্তি: অনলাইন ফরম পূরণ করে অথবা মাদ্রাসা অফিসে উপস্থিত হয়ে আবেদন করা যায়।
 ৪. কঠোর সীমারেখা (Boundaries):
 - রাজনৈতিক বা দলাদলি সংক্রান্ত কোনো প্রশ্নের উত্তর দিবেন না।
@@ -158,6 +158,107 @@ app.post('/api/assistant/chat', async (req, res) => {
     res.status(500).json({
       error: 'উত্তর তৈরিতে সাময়িক সমস্যা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।',
       details: error?.message || 'Unknown error'
+    });
+  }
+});
+
+// Firebase Admin Token Verification & Authorization Endpoint
+const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || "AIzaSyAJtkPHjq-wT7sPyHBPbfBqn-FV0B_qLi0";
+const SERVER_AUTHORIZED_ADMIN_EMAILS = [
+  'hallo.hossain.dm@gmail.com',
+  'admin@talimulquran-madrasah.edu.bd',
+  'principal@talimulquran-madrasah.edu.bd',
+  'talimulquran@gmail.com'
+];
+
+app.post('/api/admin/verify', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        authorized: false,
+        error: 'অননুমোদিত অনুরোধ। কোনো অথেন্টিকেশন টোকেন পাওয়া যায়নি।'
+      });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    if (!idToken) {
+      return res.status(401).json({
+        success: false,
+        authorized: false,
+        error: 'টোকেন ফাঁকা।'
+      });
+    }
+
+    // Cryptographic token verification directly with Google Identity Toolkit
+    const lookupResponse = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      }
+    );
+
+    const lookupData = await lookupResponse.json();
+    if (!lookupResponse.ok || !lookupData.users || lookupData.users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        authorized: false,
+        error: 'অবৈধ বা মেয়াদোত্তীর্ণ ফায়ারবেস টোকেন।'
+      });
+    }
+
+    const user = lookupData.users[0];
+    const userEmail = (user.email || '').toLowerCase().trim();
+
+    // Parse custom claims if set
+    let customClaims: Record<string, any> = {};
+    if (user.customAttributes) {
+      try {
+        customClaims = JSON.parse(user.customAttributes);
+      } catch {
+        // ignore
+      }
+    }
+
+    // Role verification:
+    // 1. Firebase Custom Claims (admin === true or role === 'admin')
+    const hasAdminClaim = Boolean(customClaims.admin === true || customClaims.role === 'admin');
+
+    // 2. Server-side authorized admin list (never exposed in client localStorage/sessionStorage)
+    const isServerAdmin = SERVER_AUTHORIZED_ADMIN_EMAILS.some((e) => e.toLowerCase() === userEmail) ||
+      userEmail.endsWith('@talimulquran-madrasah.edu.bd') ||
+      (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL.toLowerCase() === userEmail);
+
+    const isAuthorized = hasAdminClaim || isServerAdmin;
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        success: false,
+        authorized: false,
+        error: `দুঃখিত, '${userEmail}' অ্যাকাউন্টটি মাদ্রাসার অ্যাডমিন প্যানেল ব্যবহারের জন্য অনুমোদিত নয়।`
+      });
+    }
+
+    return res.json({
+      success: true,
+      authorized: true,
+      user: {
+        uid: user.localId,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        hasAdminClaim,
+        isServerAdmin,
+      }
+    });
+  } catch (error: any) {
+    console.error('Admin token verification error:', error);
+    return res.status(500).json({
+      success: false,
+      authorized: false,
+      error: 'টোকেন যাচাইয়ে সার্ভার সমস্যা হয়েছে।'
     });
   }
 });

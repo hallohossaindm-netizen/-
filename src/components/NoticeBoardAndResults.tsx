@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Bell, Search, FileText, Download, Award, CheckCircle, AlertCircle, Printer, X, Calendar, User, BookOpen } from 'lucide-react';
+import { Bell, Search, FileText, Download, Award, CheckCircle, AlertCircle, Printer, X, Calendar, User, BookOpen, QrCode, GraduationCap } from 'lucide-react';
 import { MADRASAH_INFO } from '../data/madrasahData';
-import { NoticeItem, StudentResult } from '../types';
+import { NoticeItem, StudentResult, AdmitCardData } from '../types';
 import { useMadrasah } from '../context/MadrasahContext';
+import { AdmitCardView } from './AdmitCardView';
 
 export const NoticeBoardAndResults: React.FC = () => {
-  const { notices, results } = useMadrasah();
-  const [activeTab, setActiveTab] = useState<'notices' | 'results'>('notices');
+  const { notices, results, admitCards } = useMadrasah();
+  const [activeTab, setActiveTab] = useState<'notices' | 'results' | 'admit'>('notices');
   
   // Notice state
   const [noticeFilter, setNoticeFilter] = useState<'all' | 'admission' | 'exam' | 'holiday' | 'general'>('all');
@@ -19,6 +20,42 @@ export const NoticeBoardAndResults: React.FC = () => {
   const [searchedResult, setSearchedResult] = useState<StudentResult | null>(() => results['101'] || null);
   const [resultError, setResultError] = useState<string | null>(null);
   const [isSearchingResult, setIsSearchingResult] = useState(false);
+
+  // Admit Card state
+  const [admitRollInput, setAdmitRollInput] = useState('101');
+  const [searchedAdmitCard, setSearchedAdmitCard] = useState<AdmitCardData | null>(() => admitCards['101'] || null);
+  const [admitError, setAdmitError] = useState<string | null>(null);
+  const [isSearchingAdmit, setIsSearchingAdmit] = useState(false);
+
+  // Admit Card Search Handler
+  const handleAdmitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdmitError(null);
+    const clean = admitRollInput.trim();
+
+    if (!clean) {
+      setAdmitError('অনুগ্রহ করে পরীক্ষার্থীর রোল বা রেজিস্ট্রেশন নম্বর দিন।');
+      return;
+    }
+
+    setIsSearchingAdmit(true);
+    setTimeout(() => {
+      const found = Object.values(admitCards).find(
+        (c) => c.roll.trim().toLowerCase() === clean.toLowerCase() ||
+               c.registrationNo.trim().toLowerCase() === clean.toLowerCase()
+      );
+
+      if (found) {
+        setSearchedAdmitCard(found);
+        setAdmitError(null);
+      } else {
+        setSearchedAdmitCard(null);
+        const sampleRolls = Object.keys(admitCards).slice(0, 5).join(', ');
+        setAdmitError(`রোল বা আইডি "${clean}"-এর কোনো প্রবেশপত্র পাওয়া যায়নি। অনুগ্রহ করে নমুনা রোল (${sampleRolls || '101, 102'}) দিয়ে চেষ্টা করুন অথবা এডমিন প্যানেল থেকে প্রবেশপত্র ইস্যু করুন।`);
+      }
+      setIsSearchingAdmit(false);
+    }, 200);
+  };
 
   // Filter notices
   const filteredNotices = notices.filter((item) => {
@@ -72,10 +109,10 @@ export const NoticeBoardAndResults: React.FC = () => {
 
         {/* Section Level Segmented Switcher (interactive buttons) */}
         <div className="flex justify-center mb-8">
-          <div className="inline-flex p-1 bg-stone-100 dark:bg-stone-900 rounded-lg border border-stone-200 dark:border-stone-800">
+          <div className="inline-flex p-1 bg-stone-100 dark:bg-stone-900 rounded-lg border border-stone-200 dark:border-stone-800 flex-wrap justify-center gap-1">
             <button
               onClick={() => setActiveTab('notices')}
-              className={`px-5 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all font-bangla flex items-center gap-2 cursor-pointer ${
+              className={`px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all font-bangla flex items-center gap-2 cursor-pointer ${
                 activeTab === 'notices'
                   ? 'bg-[#064E3B] text-white shadow-xs'
                   : 'text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
@@ -86,7 +123,7 @@ export const NoticeBoardAndResults: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('results')}
-              className={`px-5 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all font-bangla flex items-center gap-2 cursor-pointer ${
+              className={`px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all font-bangla flex items-center gap-2 cursor-pointer ${
                 activeTab === 'results'
                   ? 'bg-[#064E3B] text-white shadow-xs'
                   : 'text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
@@ -94,6 +131,17 @@ export const NoticeBoardAndResults: React.FC = () => {
             >
               <Award className="w-4 h-4 text-amber-300" />
               <span>অনলাইন ফলাফল (Result Portal)</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('admit')}
+              className={`px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold rounded-md transition-all font-bangla flex items-center gap-2 cursor-pointer ${
+                activeTab === 'admit'
+                  ? 'bg-[#064E3B] text-white shadow-xs'
+                  : 'text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4 text-amber-300" />
+              <span>পরীক্ষার প্রবেশপত্র (Admit Card)</span>
             </button>
           </div>
         </div>
@@ -148,7 +196,7 @@ export const NoticeBoardAndResults: React.FC = () => {
               </div>
 
               {/* Search Box */}
-              <div className="relative min-w-[240px]">
+              <div className="relative w-full sm:w-auto sm:min-w-[240px]">
                 <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
@@ -338,8 +386,8 @@ export const NoticeBoardAndResults: React.FC = () => {
                   <h5 className="text-xs font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wider mb-3">
                     বিষয়ভিত্তিক নম্বর ও গ্রেড বিবরণী:
                   </h5>
-                  <div className="border border-stone-200 dark:border-stone-700 rounded overflow-hidden">
-                    <table className="w-full text-left text-xs sm:text-sm">
+                  <div className="border border-stone-200 dark:border-stone-700 rounded overflow-hidden overflow-x-auto">
+                    <table className="w-full text-left text-xs sm:text-sm min-w-[340px]">
                       <thead>
                         <tr className="bg-stone-100 dark:bg-stone-800/80 border-b border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-200 font-bold">
                           <th className="py-2.5 px-3">ক্রম</th>
@@ -399,6 +447,91 @@ export const NoticeBoardAndResults: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 3: Admit Card Download & QR Verification Portal */}
+        {activeTab === 'admit' && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Search Box */}
+            <div className="max-w-2xl mx-auto bg-[#FAF9F5] dark:bg-stone-900/80 p-6 sm:p-8 rounded-xl border border-stone-200 dark:border-stone-800 shadow-xs font-bangla no-print">
+              <div className="text-center mb-6 space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-[#064E3B] dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                  <QrCode className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>স্বয়ংক্রিয় কিউআর কোড জেনারেটেড প্রবেশপত্র</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-100">
+                  পরীক্ষার প্রবেশপত্র অনুসন্ধান ও প্রিন্ট (Admit Card)
+                </h3>
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400">
+                  পরীক্ষার্থীর রোল অথবা রেজিস্ট্রেশন নম্বর প্রদান করে স্বয়ংক্রিয় কিউআর কোডসহ প্রবেশপত্র সংগ্রহ করুন।
+                </p>
+              </div>
+
+              <form onSubmit={handleAdmitSearch} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                    পরীক্ষার্থীর রোল বা রেজিস্ট্রেশন নম্বর <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={admitRollInput}
+                      onChange={(e) => setAdmitRollInput(e.target.value)}
+                      placeholder="যেমন: 101 বা TQWM-2026-0101"
+                      className="w-full pl-3.5 pr-10 py-2.5 text-xs sm:text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#064E3B]"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
+                      <GraduationCap className="w-5 h-5 text-emerald-700" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sample quick demo buttons */}
+                <div className="flex items-center gap-2 pt-1 flex-wrap text-xs text-stone-600 dark:text-stone-400">
+                  <span>নমুনা রোল ক্লিক করুন:</span>
+                  {Object.keys(admitCards).slice(0, 5).map((demo) => (
+                    <button
+                      key={demo}
+                      type="button"
+                      onClick={() => {
+                        setAdmitRollInput(demo);
+                        setSearchedAdmitCard(admitCards[demo] || null);
+                        setAdmitError(null);
+                      }}
+                      className="px-2.5 py-1 rounded bg-white dark:bg-stone-800 hover:bg-emerald-50 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 text-[#064E3B] dark:text-emerald-400 font-mono text-xs font-semibold cursor-pointer"
+                    >
+                      রোল {demo}
+                    </button>
+                  ))}
+                </div>
+
+                {admitError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-lg text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{admitError}</span>
+                  </div>
+                )}
+
+                <div className="text-center pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSearchingAdmit}
+                    className="px-8 py-2.5 bg-[#064E3B] hover:bg-[#043d2e] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <Search className="w-4 h-4 text-amber-300" />
+                    <span>{isSearchingAdmit ? 'প্রবেশপত্র প্রস্তুত হচ্ছে...' : 'প্রবেশপত্র দেখুন ও প্রিন্ট করুন'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Display Admit Card Component */}
+            {searchedAdmitCard && (
+              <div className="max-w-4xl mx-auto">
+                <AdmitCardView card={searchedAdmitCard} />
               </div>
             )}
           </div>

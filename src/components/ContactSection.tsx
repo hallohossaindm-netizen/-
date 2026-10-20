@@ -247,7 +247,7 @@ export const ContactSection: React.FC = () => {
                     >
                       <option value="">বিষয় নির্বাচন করুন</option>
                       <option value="admission">ভর্তি সংক্রান্ত তথ্য</option>
-                      <option value="hostel">হোস্টেল ও আবাসিক ফি</option>
+                      <option value="hostel">হেফজ আবাসিক ও অনাবাসিক ফি</option>
                       <option value="donation">সাদাকাহ ও অনুদান প্রদান</option>
                       <option value="other">সাধারণ জিজ্ঞাসা</option>
                     </select>

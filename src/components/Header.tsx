@@ -56,34 +56,37 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDonation, onOpenAssistant,
             {/* Theme Toggle Button (Light / Dark Mode) */}
             <button
               onClick={toggleTheme}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded transition-colors shadow-xs cursor-pointer bg-emerald-800/90 hover:bg-emerald-700 text-amber-300 border border-emerald-600/60"
+              className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-semibold rounded transition-colors shadow-xs cursor-pointer bg-emerald-800/90 hover:bg-emerald-700 text-amber-300 border border-emerald-600/60"
               title={isDark ? 'লাইট মোডে পরিবর্তন করুন (Light Mode)' : 'ডার্ক মোডে পরিবর্তন করুন (Dark Mode)'}
               aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDark ? (
                 <>
-                  <Sun className="w-3.5 h-3.5 text-amber-300 animate-spin-slow" />
-                  <span>লাইট মোড</span>
+                  <Sun className="w-3.5 h-3.5 text-amber-300" />
+                  <span className="hidden sm:inline">লাইট মোড</span>
                 </>
               ) : (
                 <>
                   <Moon className="w-3.5 h-3.5 text-amber-300" />
-                  <span>ডার্ক মোড</span>
+                  <span className="hidden sm:inline">ডার্ক মোড</span>
                 </>
               )}
             </button>
 
+            {/* Mobile Share / QR Code button */}
             <button
               onClick={onOpenShare}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-amber-400 hover:bg-amber-300 text-stone-900 rounded transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 text-xs font-semibold bg-amber-400 hover:bg-amber-300 text-stone-900 rounded transition-colors shadow-xs cursor-pointer"
               aria-label="মোবাইলে লিংক ও কিউআর কোড"
             >
               <Smartphone className="w-3.5 h-3.5 text-stone-900" />
-              <span>মোবাইলে খুলুন (QR)</span>
+              <span>মোবাইল লিংক</span>
             </button>
+
+            {/* Desktop / Tablet Utility Buttons */}
             <button
               onClick={onOpenAssistant}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-emerald-800/90 hover:bg-emerald-700 text-amber-300 rounded transition-colors border border-emerald-600/60 cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-emerald-800/90 hover:bg-emerald-700 text-amber-300 rounded transition-colors border border-emerald-600/60 cursor-pointer"
               aria-label="তালিমুল কুরআন সহকারী"
             >
               <Bot className="w-3.5 h-3.5 text-amber-300" />
@@ -91,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDonation, onOpenAssistant,
             </button>
             <button
               onClick={onOpenDonation}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-amber-600 hover:bg-amber-500 text-stone-900 rounded transition-colors shadow-sm cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-amber-600 hover:bg-amber-500 text-stone-900 rounded transition-colors shadow-sm cursor-pointer"
               aria-label="দান ও সদাকাহ"
             >
               <HeartHandshake className="w-3.5 h-3.5 text-stone-900" />
@@ -99,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDonation, onOpenAssistant,
             </button>
             <button
               onClick={onOpenAdmin}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded transition-colors shadow-xs cursor-pointer ${
+              className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded transition-colors shadow-xs cursor-pointer ${
                 isAdminLoggedIn
                   ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold ring-1 ring-emerald-300'
                   : 'bg-emerald-950/80 hover:bg-emerald-900 text-amber-200 border border-emerald-700/60'
@@ -118,20 +121,20 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDonation, onOpenAssistant,
       </div>
 
       {/* Main Top Navigation */}
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-3.5 flex items-center justify-between gap-8">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-3 sm:py-3.5 flex items-center justify-between gap-4 sm:gap-8">
         {/* Zone 1: Brand Wordmark */}
         <a
           href="#home"
-          className="group flex items-center gap-3 whitespace-nowrap shrink-0 focus:outline-none"
+          className="group flex items-center gap-2.5 sm:gap-3 shrink min-w-0 focus:outline-none"
         >
-          <div className="w-10 h-10 rounded-lg bg-[#064E3B] text-amber-400 flex items-center justify-center font-serif text-lg font-bold shadow-sm ring-1 ring-emerald-800/20 group-hover:bg-[#043d2e] transition-colors">
-            <BookOpen className="w-5 h-5 text-amber-400" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#064E3B] text-amber-400 flex items-center justify-center font-serif text-lg font-bold shadow-sm ring-1 ring-emerald-800/20 group-hover:bg-[#043d2e] transition-colors shrink-0">
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg lg:text-xl font-bold tracking-tight text-[#064E3B] dark:text-emerald-400 font-bangla group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition-colors">
+          <div className="flex flex-col min-w-0">
+            <span className="text-base sm:text-lg lg:text-xl font-bold tracking-tight text-[#064E3B] dark:text-emerald-400 font-bangla group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition-colors truncate">
               তালিমুল কুরআন মহিলা মাদ্রাসা
             </span>
-            <span className="text-[11px] font-sans text-stone-500 dark:text-stone-400 tracking-wider hidden sm:block">
+            <span className="text-[10px] sm:text-[11px] font-sans text-stone-500 dark:text-stone-400 tracking-wider hidden sm:block truncate">
               Talimul Quran Women's Madrasah · ফতেয়াবাদ, চট্টগ্রাম
             </span>
           </div>
@@ -176,6 +179,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDonation, onOpenAssistant,
             <Sparkles className="w-4 h-4 text-amber-300" />
             <span>ভর্তি আবেদন</span>
           </a>
+
+          {/* Direct Admin Access Button (visible on both Laptop and Mobile) */}
+          <button
+            onClick={onOpenAdmin}
+            className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-md transition-colors cursor-pointer shadow-xs ${
+              isAdminLoggedIn
+                ? 'bg-emerald-700 hover:bg-emerald-800 text-white ring-1 ring-emerald-400'
+                : 'bg-emerald-950 text-amber-300 border border-emerald-700/80 hover:bg-emerald-900'
+            }`}
+            title={isAdminLoggedIn ? 'এডমিন ড্যাশবোর্ড খুলুন (Laptop ও Mobile)' : 'এডমিন লগইন করুন (Laptop ও Mobile)'}
+            aria-label="এডমিন প্যানেল"
+          >
+            {isAdminLoggedIn ? <ShieldCheck className="w-4 h-4 text-amber-300" /> : <Lock className="w-4 h-4 text-amber-300" />}
+            <span className="font-bangla">{isAdminLoggedIn ? 'ড্যাশবোর্ড' : 'এডমিন'}</span>
+          </button>
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
